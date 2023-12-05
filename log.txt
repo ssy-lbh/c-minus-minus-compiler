@@ -1,0 +1,51 @@
+Parsing...
+1:(Block Comment, /*the maximum of three numbers*/)
+Function max
+Parameter Declare: x
+Parameter Declare: y
+Parameter Declare: z
+Declaration: biggest
+6:(Block Comment, /*comment example*/)
+Function End max
+Function main
+Declaration: x
+Declaration: y
+Declaration: z
+Declaration: biggest
+Function Call: input
+Function Call: input
+Function Call: input
+Function Call: max
+Function Call: output
+Function End main
+
+Parsing finished.
+Function: max
+[IR_MOV] (3 0 0)
+[IR_GT] (4 1 3)
+[IR_JMPNOT] (4 4 0)
+[IR_MOV] (3 1 0)
+[IR_GT] (5 2 3)
+[IR_JMPNOT] (5 7 0)
+[IR_MOV] (3 2 0)
+[IR_RET] (3 0 0)
+Function: main
+[IR_PARAM] (0 0 0)
+[IR_CALL] (input 4)
+[IR_MOV] (0 4 0)
+[IR_PARAM] (0 0 0)
+[IR_CALL] (input 5)
+[IR_MOV] (1 5 0)
+[IR_PARAM] (0 0 0)
+[IR_CALL] (input 6)
+[IR_MOV] (2 6 0)
+[IR_PARAM] (0 0 0)
+[IR_PASS] (2 0 0)
+[IR_PASS] (1 0 0)
+[IR_PASS] (0 0 0)
+[IR_CALL] (max 7)
+[IR_MOV] (3 7 0)
+[IR_PARAM] (0 0 0)
+[IR_PASS] (3 0 0)
+[IR_CALL] (output 8)
+[IR_RET] (0 0 0)
