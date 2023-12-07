@@ -27,7 +27,6 @@ typedef enum _ir_code {
     IR_SHR,
     IR_NEG,
     IR_MOV,
-    IR_ASSIGN,
     IR_JMP,
     IR_JMPIF,
     IR_JMPNOT,
@@ -42,15 +41,17 @@ typedef enum _ir_code {
     IR_LOGIC_AND,
     IR_LOGIC_OR,
     IR_LOGIC_NOT,
-    IR_ARR_LOAD,
-    IR_ARR_STORE,
+    IR_ADDR,
+    IR_DEREF,
 } ir_code;
+
+// JMPX [addr] [cond]
 
 typedef struct _ir {
     ir_code ins;
-    int op1;
-    int op2;
-    int op3;
+    expr_info op1;
+    expr_info op2;
+    expr_info op3;
     char *op;
 } ir;
 
@@ -74,11 +75,23 @@ typedef struct _ir_program {
     dict *func_dict;
 } ir_program;
 
+expr_info ir_expr();
+char ir_expr_type(expr_info e);
+expr_info ir_expr_imm(int ival);
+expr_info ir_expr_var(int id);
+expr_info ir_expr_ref(int id);
+expr_info ir_expr_ptr(int id);
+
 ir_program *ir_program_new();
 ir_func *ir_func_new(const char *name, int param_num);
 ir_func *ir_func_new_native(const char *name, int param_num, void *native_func);
 ir_func_ctx *ir_func_ctx_new(ir_func *f);
-ir ir_new(ir_code ins, int op1, int op2, int op3);
+ir ir_new0(ir_code ins);
+ir ir_new1(ir_code ins, expr_info op1);
+ir ir_new2(ir_code ins, expr_info op1, expr_info op2);
+ir ir_new3(ir_code ins, expr_info op1, expr_info op2, expr_info op3);
+ir ir_imm1(ir_code ins, int ival);
+ir ir_var1(ir_code ins, expr_info op2);
 ir ir_call(char *func_name, int retid);
 
 void ir_program_add_func(ir_program *p, ir_func *f);

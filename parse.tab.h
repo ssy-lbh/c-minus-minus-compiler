@@ -56,23 +56,22 @@ extern int yydebug;
     YYUNDEF = 257,                 /* "invalid token"  */
     NUMBER = 258,                  /* NUMBER  */
     NAME = 259,                    /* NAME  */
-    SEMICOLON = 260,               /* SEMICOLON  */
-    IF = 261,                      /* IF  */
-    WHILE = 262,                   /* WHILE  */
-    RETURN = 263,                  /* RETURN  */
-    VOID = 264,                    /* VOID  */
-    INT = 265,                     /* INT  */
-    FLOAT = 266,                   /* FLOAT  */
-    LE = 267,                      /* LE  */
-    GE = 268,                      /* GE  */
-    EQ = 269,                      /* EQ  */
-    NE = 270,                      /* NE  */
-    SHL = 271,                     /* SHL  */
-    SHR = 272,                     /* SHR  */
-    AND = 273,                     /* AND  */
-    OR = 274,                      /* OR  */
-    ARROW = 275,                   /* ARROW  */
-    ELSE = 276                     /* ELSE  */
+    IF = 260,                      /* IF  */
+    WHILE = 261,                   /* WHILE  */
+    RETURN = 262,                  /* RETURN  */
+    VOID = 263,                    /* VOID  */
+    INT = 264,                     /* INT  */
+    FLOAT = 265,                   /* FLOAT  */
+    LE = 266,                      /* LE  */
+    GE = 267,                      /* GE  */
+    EQ = 268,                      /* EQ  */
+    NE = 269,                      /* NE  */
+    SHL = 270,                     /* SHL  */
+    SHR = 271,                     /* SHR  */
+    AND = 272,                     /* AND  */
+    OR = 273,                      /* OR  */
+    ARROW = 274,                   /* ARROW  */
+    ELSE = 275                     /* ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -87,7 +86,7 @@ union YYSTYPE
     char* name;
     expr_info value;
 
-#line 91 "parse.tab.h"
+#line 90 "parse.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

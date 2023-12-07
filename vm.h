@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "types.h"
+
 #include "dict.h"
 #include "ir.h"
 
 #define CONTEXT_SIZE 0x100
 
 typedef struct _ir_program ir_program;
-
-typedef long long var_t;
 
 typedef struct _vm_ctx {
     int pc;

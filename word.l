@@ -81,7 +81,7 @@ other .
 }
 {semicolon} {
     //printf("%d:(Semicolon, %s)\n", line, yytext);
-    return SEMICOLON;
+    return ';';
 }
 {line_comment} {
     printf("%d:(Line Comment, %s)\n", line, yytext);

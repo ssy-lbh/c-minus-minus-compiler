@@ -11,4 +11,4 @@ gcc -c vm.c -o vm.o
 
 gcc lex.o parse.o dict.o ir.o vm.o -o test
 
-#./test < test1.c
+#./test < test2.c > log.txt

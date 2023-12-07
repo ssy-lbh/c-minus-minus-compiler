@@ -1,5 +1,54 @@
 #include "ir.h"
 
+expr_info ir_expr(){
+    expr_info e;
+    e.is_imm = 0;
+    e.is_ref = 0;
+    return e;
+}
+
+char ir_expr_type(expr_info e){
+    if(e.is_imm){
+        return 'i';
+    }else if(e.is_ref){
+        return 'r';
+    }else{
+        return 'v';
+    }
+}
+
+expr_info ir_expr_imm(int ival){
+    expr_info e;
+    e.is_imm = 1;
+    e.is_ref = 0;
+    e.ival = ival;
+    return e;
+}
+
+expr_info ir_expr_var(int id){
+    expr_info e;
+    e.is_imm = 0;
+    e.is_ref = 0;
+    e.ival = id;
+    return e;
+}
+
+expr_info ir_expr_ref(int id){
+    expr_info e;
+    e.is_imm = 0;
+    e.is_ref = 1;
+    e.ival = id;
+    return e;
+}
+
+expr_info ir_expr_ptr(int id){
+    expr_info e;
+    e.is_imm = 0;
+    e.is_ref = 0;
+    e.ival = id;
+    return e;
+}
+
 ir_program *ir_program_new(){
     ir_program *p = (ir_program *)malloc(sizeof(ir_program));
     p->func_dict = dict_new(DEFAULT_DICT_SIZE);
@@ -29,7 +78,34 @@ ir_func_ctx *ir_func_ctx_new(ir_func *f){
     return ctx;
 }
 
-ir ir_new(ir_code ins, int op1, int op2, int op3){
+ir ir_new0(ir_code ins){
+    ir i;
+    i.ins = ins;
+    i.op1 = ir_expr_imm(0);
+    i.op2 = ir_expr_imm(0);
+    i.op3 = ir_expr_imm(0);
+    return i;
+}
+
+ir ir_new1(ir_code ins, expr_info op1){
+    ir i;
+    i.ins = ins;
+    i.op1 = op1;
+    i.op2 = ir_expr_imm(0);
+    i.op3 = ir_expr_imm(0);
+    return i;
+}
+
+ir ir_new2(ir_code ins, expr_info op1, expr_info op2){
+    ir i;
+    i.ins = ins;
+    i.op1 = op1;
+    i.op2 = op2;
+    i.op3 = ir_expr_imm(0);
+    return i;
+}
+
+ir ir_new3(ir_code ins, expr_info op1, expr_info op2, expr_info op3){
     ir i;
     i.ins = ins;
     i.op1 = op1;
@@ -38,13 +114,32 @@ ir ir_new(ir_code ins, int op1, int op2, int op3){
     return i;
 }
 
+ir ir_imm1(ir_code ins, int ival){
+    ir i;
+    i.ins = ins;
+    i.op1 = ir_expr_imm(0);
+    i.op2 = ir_expr_imm(ival);
+    i.op3 = ir_expr_imm(0);
+    return i;
+}
+
+ir ir_var1(ir_code ins, expr_info op2){
+    ir i;
+    i.ins = ins;
+    i.op1 = ir_expr_imm(0);
+    i.op2 = op2;
+    i.op3 = ir_expr_imm(0);
+    return i;
+
+}
+
 ir ir_call(char *func_name, int retid){
     ir i;
     i.ins = IR_CALL;
     int len = strlen(func_name);
     i.op = (char *)malloc(sizeof(char) * (len + 1));
     strcpy(i.op, func_name);
-    i.op1 = retid;
+    i.op1.ival = retid;
     return i;
 }
 
@@ -116,7 +211,6 @@ void ir_print(ir i){
         "IR_SHR",
         "IR_NEG",
         "IR_MOV",
-        "IR_ASSIGN",
         "IR_JMP",
         "IR_JMPIF",
         "IR_JMPNOT",
@@ -131,10 +225,15 @@ void ir_print(ir i){
         "IR_LOGIC_AND",
         "IR_LOGIC_OR",
         "IR_LOGIC_NOT",
+        "IR_ADDR",
+        "IR_DEREF",
     };
     if (i.ins == IR_CALL)
-        printf("[%s] (%s %d)\n", ir_code_str[i.ins], i.op, i.op1);
+        printf("[%s] (%s %c%lld)\n", ir_code_str[i.ins], i.op, ir_expr_type(i.op1), i.op1.ival);
     else {
-        printf("[%s] (%d %d %d)\n", ir_code_str[i.ins], i.op1, i.op2, i.op3);
+        printf("[%s] (%c%lld %c%lld %c%lld)\n", ir_code_str[i.ins],
+            ir_expr_type(i.op1), i.op1.ival,
+            ir_expr_type(i.op2), i.op2.ival,
+            ir_expr_type(i.op3), i.op3.ival);
     }
 }

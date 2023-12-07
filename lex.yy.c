@@ -842,7 +842,7 @@ YY_RULE_SETUP
 #line 82 "word.l"
 {
     //printf("%d:(Semicolon, %s)\n", line, yytext);
-    return SEMICOLON;
+    return ';';
 }
 	YY_BREAK
 case 7:

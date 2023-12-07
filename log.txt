@@ -1,48 +1,66 @@
+parse.y: warning: 1 shift/reduce conflict [-Wconflicts-sr]
+parse.y: note: rerun with option '-Wcounterexamples' to generate conflict counterexamples
+parse.y:183.5-10: warning: rule useless in parser due to conflicts [-Wother]
+  183 |     INT {}
+      |     ^~~~~~
+ssylbh@lbh-lenovo:~/CMM$ bison parse.y -Wcounterexamples
+parse.y: warning: 1 shift/reduce conflict [-Wconflicts-sr]
 parse.y: warning: shift/reduce conflict on token NAME [-Wcounterexamples]
-  First example: program VOID • NAME '(' para_decl ')' '{' program '}'
+  First example: program INT • NAME '=' expr ';'
   Shift derivation
     program
     ↳ 2: program stmt
                  ↳ 4: decl
-                      ↳ 16: VOID func_name    '(' para_decl ')' '{' program '}'
-                                 ↳ 19: • NAME
-  Second example: program VOID • NAME SEMICOLON $end
-  Reduce derivation
-    $accept
-    ↳ 0: program                                                   $end
-         ↳ 2: program stmt
-                      ↳ 4: decl
-                           ↳ 14: type         var_name   SEMICOLON
-                                 ↳ 20: VOID • ↳ 18: NAME
-parse.y: warning: shift/reduce conflict on token NAME [-Wcounterexamples]
-  First example: program INT • NAME '=' expr SEMICOLON
-  Shift derivation
-    program
-    ↳ 2: program stmt
-                 ↳ 4: decl
-                      ↳ 15: INT var_name     '=' expr SEMICOLON
-                                ↳ 18: • NAME
-  Second example: program INT • NAME SEMICOLON $end
+                      ↳ 14: var_decl
+                            ↳ 74: INT var_name     '=' expr ';'
+                                      ↳ 16: • NAME
+  Second example: program INT • NAME ';' $end
   Reduce derivation
     $accept
     ↳ 0: program                                                  $end
          ↳ 2: program stmt
                       ↳ 4: decl
-                           ↳ 14: type        var_name   SEMICOLON
-                                 ↳ 21: INT • ↳ 18: NAME
+                           ↳ 14: var_decl
+                                 ↳ 72: type        var_name   ';'
+                                       ↳ 71: INT • ↳ 16: NAME
 parse.y: warning: shift/reduce conflict on token NAME [-Wcounterexamples]
   First example: program INT • NAME '(' para_decl ')' '{' program '}'
   Shift derivation
     program
     ↳ 2: program stmt
                  ↳ 4: decl
-                      ↳ 17: INT func_name    '(' para_decl ')' '{' program '}'
-                                ↳ 19: • NAME
-  Second example: program INT • NAME SEMICOLON $end
+                      ↳ 15: func_decl
+                            ↳ 78: INT func_name    '(' para_decl ')' '{' program '}'
+                                      ↳ 17: • NAME
+  Second example: program INT • NAME ';' $end
   Reduce derivation
     $accept
     ↳ 0: program                                                  $end
          ↳ 2: program stmt
                       ↳ 4: decl
-                           ↳ 14: type        var_name   SEMICOLON
-                                 ↳ 21: INT • ↳ 18: NAME
+                           ↳ 14: var_decl
+                                 ↳ 72: type        var_name   ';'
+                                       ↳ 71: INT • ↳ 16: NAME
+parse.y:183.5-10: warning: rule useless in parser due to conflicts [-Wother]
+  183 |     INT {}
+      |     ^~~~~~
+ssylbh@lbh-lenovo:~/CMM$ bison parse.y -Wcounterexamples
+parse.y: warning: 1 shift/reduce conflict [-Wconflicts-sr]
+parse.y: warning: shift/reduce conflict on token NAME [-Wcounterexamples]
+  First example: program INT • NAME '(' para_decl ')' '{' program '}'
+  Shift derivation
+    program
+    ↳ 2: program stmt
+                 ↳ 4: decl
+                      ↳ 15: func_decl
+                            ↳ 78: INT func_name    '(' para_decl ')' '{' program '}'
+                                      ↳ 17: • NAME
+  Second example: program INT • NAME ';' $end
+  Reduce derivation
+    $accept
+    ↳ 0: program                                                  $end
+         ↳ 2: program stmt
+                      ↳ 4: decl
+                           ↳ 14: var_decl
+                                 ↳ 72: type        var_name   ';'
+                                       ↳ 71: INT • ↳ 16: NAME

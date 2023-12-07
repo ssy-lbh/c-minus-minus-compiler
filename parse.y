@@ -1,6 +1,5 @@
 %token NUMBER
 %token NAME
-%token SEMICOLON
 
 %token IF
 %token WHILE
@@ -20,10 +19,11 @@
 %token OR
 %token ARROW
 
+%left ';'
 %left IF ELSE WHILE RETURN
 %left '(' ')' '[' ']' '{' '}'
 %left ','
-%left '='
+%right '='
 %left AND OR
 %left '<' '>' LE GE EQ NE SHL SHR
 %left '^' '&' '|'
@@ -67,62 +67,34 @@ extern FILE* yyin;
 %nterm <num> constexpr para_list func_call if while_start while_cond stmt
 %nterm <name> var_name
 %nterm <value> expr
-%nterm func_name
+%nterm func_name var_decl func_decl
 
 %%
 program:
     | program stmt
     ;
 stmt:
-    expr SEMICOLON {}
+    expr ';' {}
     | decl {}
-    | if stmt { f_stack[f_top]->f->code[$1].op2 = f_stack[f_top]->f->code_num; }
-    | while_start while_cond stmt { ir_func_add_code(f_stack[f_top]->f, ir_new(IR_JMP, $1, 0, 0)); f_stack[f_top]->f->code[$2].op2 = f_stack[f_top]->f->code_num; }
+    | if stmt { f_stack[f_top]->f->code[$1].op1.ival = f_stack[f_top]->f->code_num; }
+    | while_start while_cond stmt { ir_func_add_code(f_stack[f_top]->f, ir_imm1(IR_JMP, $1)); f_stack[f_top]->f->code[$2].op1.ival = f_stack[f_top]->f->code_num; }
     | '{' program '}' {}
-    | RETURN expr SEMICOLON { ir_func_add_code(f_stack[f_top]->f, ir_new(IR_RET, $2.ival, 0, 0)); }
-    | RETURN SEMICOLON { ir_func_add_code(f_stack[f_top]->f, ir_new(IR_RET, 0, 0, 0)); }
-    | SEMICOLON {}
+    | RETURN expr ';' { ir_func_add_code(f_stack[f_top]->f, ir_var1(IR_RET, $2)); }
+    | RETURN ';' { ir_func_add_code(f_stack[f_top]->f, ir_imm1(IR_RET, 0)); }
+    | ';' {}
     ;
 if:
-    IF '(' expr ')' { $$ = f_stack[f_top]->f->code_num; ir_func_add_code(f_stack[f_top]->f, ir_new(IR_JMPNOT, $3.ival, 0, 0)); }
+    IF '(' expr ')' { $$ = f_stack[f_top]->f->code_num; ir_func_add_code(f_stack[f_top]->f, ir_var1(IR_JMPNOT, $3)); }
     ;
 while_cond:
-    '(' expr ')' { $$ = ir_func_add_code(f_stack[f_top]->f, ir_new(IR_JMPNOT, $2.ival, 0, 0)); }
+    '(' expr ')' { $$ = ir_func_add_code(f_stack[f_top]->f, ir_var1(IR_JMPNOT, $2)); }
     ;
 while_start:
     WHILE { $$ = f_stack[f_top]->f->code_num; }
     ;
 decl:
-    INT var_name SEMICOLON {
-        ir_func_ctx_add_local(f_stack[f_top], $2, 1);
-        free($2);
-    }
-    | INT var_name '=' expr SEMICOLON {
-        int id = ir_func_ctx_add_local(f_stack[f_top], $2, 1);
-        free($2);
-        ir_func_add_code(f_stack[f_top]->f, ir_new(IR_MOV, id, $4.ival, 0));
-    }
-    | INT var_name '[' constexpr ']' SEMICOLON {
-        long long length = $4;
-        ir_func_ctx_add_local(f_stack[f_top], $2, length);
-        free($2);
-    }
-    | VOID func_name '(' para_decl ')' '{' program '}' {
-        printf("Function End %s\n", f_stack[f_top]->f->name);
-        if (f_stack[f_top]->f->code[f_stack[f_top]->f->code_num - 1].ins != IR_RET){
-            ir_func_add_code(f_stack[f_top]->f, ir_new(IR_ASSIGN, 0, 0, 0));
-            ir_func_add_code(f_stack[f_top]->f, ir_new(IR_RET, 0, 0, 0));
-        }
-        ir_func_ctx_free(f_stack[f_top--]);
-    }
-    | INT func_name '(' para_decl ')' '{' program '}' {
-        printf("Function End %s\n", f_stack[f_top]->f->name);
-        if (f_stack[f_top]->f->code[f_stack[f_top]->f->code_num - 1].ins != IR_RET){
-            ir_func_add_code(f_stack[f_top]->f, ir_new(IR_ASSIGN, 0, 0, 0));
-            ir_func_add_code(f_stack[f_top]->f, ir_new(IR_RET, 0, 0, 0));
-        }
-        ir_func_ctx_free(f_stack[f_top--]);
-    }
+    var_decl
+    | func_decl
     ;
 var_name:
     NAME {
@@ -138,38 +110,40 @@ func_name:
     }
     ;
 expr:
-    NUMBER { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_ASSIGN, $$.ival, num, 0)); }
-    | NAME { $$.ival = ir_func_ctx_get_local(f_stack[f_top], name); }
-    | expr '=' expr { ir_func_add_code(f_stack[f_top]->f, ir_new(IR_MOV, $1.ival, $3.ival, 0)); }
-    | expr '+' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_ADD, $$.ival, $1.ival, $3.ival)); }
-    | expr '-' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_SUB, $$.ival, $1.ival, $3.ival)); }
-    | expr '*' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_MUL, $$.ival, $1.ival, $3.ival)); }
-    | expr '/' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_DIV, $$.ival, $1.ival, $3.ival)); }
-    | expr '%' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_MOD, $$.ival, $1.ival, $3.ival)); }
-    | expr '<' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_LT, $$.ival, $1.ival, $3.ival)); }
-    | expr '>' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_GT, $$.ival, $1.ival, $3.ival)); }
-    | expr LE expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_LE, $$.ival, $1.ival, $3.ival)); }
-    | expr GE expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_GE, $$.ival, $1.ival, $3.ival)); }
-    | expr EQ expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_EQ, $$.ival, $1.ival, $3.ival)); }
-    | expr NE expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_NE, $$.ival, $1.ival, $3.ival)); }
-    | expr SHL expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_SHL, $$.ival, $1.ival, $3.ival)); }
-    | expr SHR expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_SHR, $$.ival, $1.ival, $3.ival)); }
-    | '-' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_NEG, $$.ival, $2.ival, 0)); }
-    | '~' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_NOT, $$.ival, $2.ival, 0)); }
-    | '!' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_LOGIC_NOT, $$.ival, $2.ival, 0)); }
-    | expr '&' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_AND, $$.ival, $1.ival, $3.ival)); }
-    | expr '|' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_OR, $$.ival, $1.ival, $3.ival)); }
-    | expr '^' expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_XOR, $$.ival, $1.ival, $3.ival)); }
-    | expr AND expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_LOGIC_AND, $$.ival, $1.ival, $3.ival)); }
-    | expr OR expr { $$.ival = ir_func_ctx_inc_local(f_stack[f_top]); ir_func_add_code(f_stack[f_top]->f, ir_new(IR_LOGIC_OR, $$.ival, $1.ival, $3.ival)); }
-    | '(' expr ')' { $$.ival = $2.ival; }
+    NUMBER { $$ = ir_expr_imm(num); }
+    | NAME { $$ = ir_expr_var(ir_func_ctx_get_local(f_stack[f_top], name)); }
+    | expr '=' expr { ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_MOV, $1, $3)); $$ = $1; }
+    | expr '+' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_ADD, $$, $1, $3)); }
+    | expr '-' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SUB, $$, $1, $3)); }
+    | expr '*' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_MUL, $$, $1, $3)); }
+    | expr '/' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_DIV, $$, $1, $3)); }
+    | expr '%' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_MOD, $$, $1, $3)); }
+    | expr '<' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_LT, $$, $1, $3)); }
+    | expr '>' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_GT, $$, $1, $3)); }
+    | expr LE expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_LE, $$, $1, $3)); }
+    | expr GE expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_GE, $$, $1, $3)); }
+    | expr EQ expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_EQ, $$, $1, $3)); }
+    | expr NE expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_NE, $$, $1, $3)); }
+    | expr SHL expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SHL, $$, $1, $3)); }
+    | expr SHR expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SHR, $$, $1, $3)); }
+    | '-' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_NEG, $$, $2)); }
+    | '~' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_NOT, $$, $2)); }
+    | '!' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_LOGIC_NOT, $$, $2)); }
+    | expr '&' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_AND, $$, $1, $3)); }
+    | expr '|' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_OR, $$, $1, $3)); }
+    | expr '^' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_XOR, $$, $1, $3)); }
+    | expr AND expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_LOGIC_AND, $$, $1, $3)); }
+    | expr OR expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_LOGIC_OR, $$, $1, $3)); }
+    | '(' expr ')' { $$ = $2; }
+    | '&' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); if ($2.is_imm){ printf("'&' could not be used on an immediate number\n"); exit(1); } ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_ADDR, $$, $2)); }
+    | '*' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_DEREF, $$, $2)); }
+    | expr '[' expr ']' { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_ADD, $$, ir_expr_imm($1.ival), $3)); $$ = ir_expr_ref($$.ival); }
     | func_call '(' para_list ')' {
-        int id = ir_func_ctx_inc_local(f_stack[f_top]);
-        ir i = ir_new(IR_CALL, id, 0, 0);
+        $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top]));
+        ir i = ir_new1(IR_CALL, $$);
         i.op = f_stack[f_top]->f->code[$1].op;
         f_stack[f_top]->f->code[$1].op = NULL;
         ir_func_add_code(f_stack[f_top]->f, i);
-        $$.ival = id;
     }
     ;
 constexpr:
@@ -200,26 +174,54 @@ constexpr:
 func_call:
     NAME {
         printf("Function Call: %s\n", name);
-        ir i = ir_new(IR_PARAM, 0, 0, 0);
+        ir i = ir_new0(IR_PARAM);
         i.op = strdup(name);
         $$ = ir_func_add_code(f_stack[f_top]->f, i);
     }
     ;
+type_name:
+    INT
+    | VOID
+    | type_name '*'
+    ;
+var_decl:
+    type_name var_name ';' {
+        ir_func_ctx_add_local(f_stack[f_top], $2, 1);
+        free($2);
+    }
+    | type_name var_name '=' expr ';' {
+        expr_info id = ir_expr_var(ir_func_ctx_add_local(f_stack[f_top], $2, 1));
+        free($2);
+        ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_MOV, id, $4));
+    }
+    | type_name var_name '[' constexpr ']' ';' {
+        int length = (int)$4;
+        ir_func_ctx_add_local(f_stack[f_top], $2, length);
+        free($2);
+    }
+func_decl:
+    type_name func_name '(' para_decl ')' '{' program '}' {
+        printf("Function End %s\n", f_stack[f_top]->f->name);
+        if (f_stack[f_top]->f->code[f_stack[f_top]->f->code_num - 1].ins != IR_RET){
+            ir_func_add_code(f_stack[f_top]->f, ir_imm1(IR_RET, 0));
+        }
+        ir_func_ctx_free(f_stack[f_top--]);
+    }
 para_decl:
-    INT NAME {
+    type_name NAME {
         printf("Parameter Declare: %s\n", name);
         ir_func_ctx_add_local(f_stack[f_top], name, 1);
     }
     | VOID
-    | INT NAME {
+    | type_name NAME {
         printf("Parameter Declare: %s\n", name);
         ir_func_ctx_add_local(f_stack[f_top], name, 1);
     } ',' para_decl
     | {}
     ;
 para_list:
-    expr { ir_func_add_code(f_stack[f_top]->f, ir_new(IR_PASS, $1.ival, 0, 0)); }
-    | para_list ',' expr { ir_func_add_code(f_stack[f_top]->f, ir_new(IR_PASS, $3.ival, 0, 0)); }
+    expr { ir_func_add_code(f_stack[f_top]->f, ir_var1(IR_PASS, $1)); }
+    | para_list ',' expr { ir_func_add_code(f_stack[f_top]->f, ir_var1(IR_PASS, $3)); }
     | {}
     ;
 %%
