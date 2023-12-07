@@ -71,13 +71,20 @@ other .
 }
 {whitespace} {
     //printf("%d:(Whitespace)\n", line);
-    int len = strlen(yytext);
-    for (int i = 0; i < len; i++) {
+    size_t len = strlen(yytext);
+    for (size_t i = 0; i < len; i++) {
         if (yytext[i] == '\n') line++;
     }
 }
 {str} {
     //printf("%d:(String, %s)\n", line, yytext);
+    size_t len = strlen(yytext);
+    size_t p = 0;
+    for (size_t i = 1; i < len - 1; i++, p++) {
+        name[p] = yytext[i];
+    }
+    name[p] = '\0';
+    return STR;
 }
 {semicolon} {
     //printf("%d:(Semicolon, %s)\n", line, yytext);

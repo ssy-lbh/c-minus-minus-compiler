@@ -4,6 +4,7 @@ expr_info ir_expr(){
     expr_info e;
     e.is_imm = 0;
     e.is_ref = 0;
+    e.is_var = 1;
     return e;
 }
 
@@ -12,39 +13,44 @@ char ir_expr_type(expr_info e){
         return 'i';
     }else if(e.is_ref){
         return 'r';
-    }else{
+    }else if(e.is_var){
         return 'v';
     }
+    return '?';
 }
 
-expr_info ir_expr_imm(int ival){
+expr_info ir_expr_imm(var_t ival){
     expr_info e;
     e.is_imm = 1;
     e.is_ref = 0;
+    e.is_var = 0;
     e.ival = ival;
     return e;
 }
 
-expr_info ir_expr_var(int id){
+expr_info ir_expr_var(var_t id){
     expr_info e;
     e.is_imm = 0;
     e.is_ref = 0;
+    e.is_var = 1;
     e.ival = id;
     return e;
 }
 
-expr_info ir_expr_ref(int id){
+expr_info ir_expr_ref(var_t id){
     expr_info e;
     e.is_imm = 0;
     e.is_ref = 1;
+    e.is_var = 0;
     e.ival = id;
     return e;
 }
 
-expr_info ir_expr_ptr(int id){
+expr_info ir_expr_ptr(var_t id){
     expr_info e;
     e.is_imm = 0;
     e.is_ref = 0;
+    e.is_var = 1;
     e.ival = id;
     return e;
 }
@@ -114,7 +120,7 @@ ir ir_new3(ir_code ins, expr_info op1, expr_info op2, expr_info op3){
     return i;
 }
 
-ir ir_imm1(ir_code ins, int ival){
+ir ir_imm1(ir_code ins, var_t ival){
     ir i;
     i.ins = ins;
     i.op1 = ir_expr_imm(0);
@@ -133,13 +139,20 @@ ir ir_var1(ir_code ins, expr_info op2){
 
 }
 
-ir ir_call(char *func_name, int retid){
+ir ir_call(char *func_name, var_t retid){
     ir i;
     i.ins = IR_CALL;
-    int len = strlen(func_name);
-    i.op = (char *)malloc(sizeof(char) * (len + 1));
-    strcpy(i.op, func_name);
+    i.op = strdup(func_name);
     i.op1.ival = retid;
+    i.op1.is_var = 1;
+    return i;
+}
+
+ir ir_lea(expr_info op1, char *str){
+    ir i;
+    i.ins = IR_LEA;
+    i.op = strdup(str);
+    i.op1 = op1;
     return i;
 }
 
@@ -188,7 +201,7 @@ void ir_func_free(ir_func *f){
 }
 
 void ir_free(ir i){
-    if(i.ins == IR_CALL){
+    if(i.ins == IR_CALL || i.ins == IR_LEA){
         free(i.op);
     }
 }
@@ -227,10 +240,13 @@ void ir_print(ir i){
         "IR_LOGIC_NOT",
         "IR_ADDR",
         "IR_DEREF",
+        "IR_LEA",
     };
-    if (i.ins == IR_CALL)
+    if (i.ins == IR_CALL){
         printf("[%s] (%s %c%lld)\n", ir_code_str[i.ins], i.op, ir_expr_type(i.op1), i.op1.ival);
-    else {
+    } else if (i.ins == IR_LEA){
+        printf("[%s] (%c%lld %s)\n", ir_code_str[i.ins], ir_expr_type(i.op1), i.op1.ival, i.op);
+    } else {
         printf("[%s] (%c%lld %c%lld %c%lld)\n", ir_code_str[i.ins],
             ir_expr_type(i.op1), i.op1.ival,
             ir_expr_type(i.op2), i.op2.ival,

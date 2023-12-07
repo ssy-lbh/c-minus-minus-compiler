@@ -9,6 +9,8 @@
 %token INT
 %token FLOAT
 
+%token STR
+
 %token LE
 %token GE
 %token EQ
@@ -112,6 +114,7 @@ func_name:
 expr:
     NUMBER { $$ = ir_expr_imm(num); }
     | NAME { $$ = ir_expr_var(ir_func_ctx_get_local(f_stack[f_top], name)); }
+    | STR { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_lea($$, name)); }
     | expr '=' expr { ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_MOV, $1, $3)); $$ = $1; }
     | expr '+' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_ADD, $$, $1, $3)); }
     | expr '-' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SUB, $$, $1, $3)); }

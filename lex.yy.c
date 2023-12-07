@@ -823,8 +823,8 @@ YY_RULE_SETUP
 #line 72 "word.l"
 {
     //printf("%d:(Whitespace)\n", line);
-    int len = strlen(yytext);
-    for (int i = 0; i < len; i++) {
+    size_t len = strlen(yytext);
+    for (size_t i = 0; i < len; i++) {
         if (yytext[i] == '\n') line++;
     }
 }
@@ -835,11 +835,18 @@ YY_RULE_SETUP
 #line 79 "word.l"
 {
     //printf("%d:(String, %s)\n", line, yytext);
+    size_t len = strlen(yytext);
+    size_t p = 0;
+    for (size_t i = 1; i < len - 1; i++, p++) {
+        name[p] = yytext[i];
+    }
+    name[p] = '\0';
+    return STR;
 }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 82 "word.l"
+#line 89 "word.l"
 {
     //printf("%d:(Semicolon, %s)\n", line, yytext);
     return ';';
@@ -848,14 +855,14 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 86 "word.l"
+#line 93 "word.l"
 {
     printf("%d:(Line Comment, %s)\n", line, yytext);
 }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 89 "word.l"
+#line 96 "word.l"
 {
     printf("%d:(Block Comment, %s)\n", line, yytext);
 }
@@ -863,14 +870,14 @@ YY_RULE_SETUP
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 92 "word.l"
+#line 99 "word.l"
 {
     printf("%d:(Preprocessor, %s)\n", line, yytext);
 }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 95 "word.l"
+#line 102 "word.l"
 {
     printf("%d:(Other, %s)\n", line, yytext);
     yyerror("Illegal Character!");
@@ -878,10 +885,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 99 "word.l"
+#line 106 "word.l"
 ECHO;
 	YY_BREAK
-#line 885 "lex.yy.c"
+#line 892 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1886,7 +1893,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 99 "word.l"
+#line 106 "word.l"
 
 
 void yyerror(char *s){

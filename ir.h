@@ -43,6 +43,7 @@ typedef enum _ir_code {
     IR_LOGIC_NOT,
     IR_ADDR,
     IR_DEREF,
+    IR_LEA,
 } ir_code;
 
 // JMPX [addr] [cond]
@@ -77,10 +78,10 @@ typedef struct _ir_program {
 
 expr_info ir_expr();
 char ir_expr_type(expr_info e);
-expr_info ir_expr_imm(int ival);
-expr_info ir_expr_var(int id);
-expr_info ir_expr_ref(int id);
-expr_info ir_expr_ptr(int id);
+expr_info ir_expr_imm(var_t ival);
+expr_info ir_expr_var(var_t id);
+expr_info ir_expr_ref(var_t id);
+expr_info ir_expr_ptr(var_t id);
 
 ir_program *ir_program_new();
 ir_func *ir_func_new(const char *name, int param_num);
@@ -90,9 +91,10 @@ ir ir_new0(ir_code ins);
 ir ir_new1(ir_code ins, expr_info op1);
 ir ir_new2(ir_code ins, expr_info op1, expr_info op2);
 ir ir_new3(ir_code ins, expr_info op1, expr_info op2, expr_info op3);
-ir ir_imm1(ir_code ins, int ival);
+ir ir_imm1(ir_code ins, var_t ival);
 ir ir_var1(ir_code ins, expr_info op2);
-ir ir_call(char *func_name, int retid);
+ir ir_call(char *func_name, var_t retid);
+ir ir_lea(expr_info op1, char *str);
 
 void ir_program_add_func(ir_program *p, ir_func *f);
 int ir_func_add_code(ir_func *f, ir i);

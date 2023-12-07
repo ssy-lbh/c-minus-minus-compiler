@@ -62,16 +62,17 @@ extern int yydebug;
     VOID = 263,                    /* VOID  */
     INT = 264,                     /* INT  */
     FLOAT = 265,                   /* FLOAT  */
-    LE = 266,                      /* LE  */
-    GE = 267,                      /* GE  */
-    EQ = 268,                      /* EQ  */
-    NE = 269,                      /* NE  */
-    SHL = 270,                     /* SHL  */
-    SHR = 271,                     /* SHR  */
-    AND = 272,                     /* AND  */
-    OR = 273,                      /* OR  */
-    ARROW = 274,                   /* ARROW  */
-    ELSE = 275                     /* ELSE  */
+    STR = 266,                     /* STR  */
+    LE = 267,                      /* LE  */
+    GE = 268,                      /* GE  */
+    EQ = 269,                      /* EQ  */
+    NE = 270,                      /* NE  */
+    SHL = 271,                     /* SHL  */
+    SHR = 272,                     /* SHR  */
+    AND = 273,                     /* AND  */
+    OR = 274,                      /* OR  */
+    ARROW = 275,                   /* ARROW  */
+    ELSE = 276                     /* ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -80,13 +81,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 61 "parse.y"
+#line 63 "parse.y"
 
     long long num;
     char* name;
     expr_info value;
 
-#line 90 "parse.tab.h"
+#line 91 "parse.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
