@@ -28,9 +28,10 @@ semicolon [\;]
 
 number {digit}+
 name ({letter}|_)({letter}|{digit}|_)*
-operator \+|-|\*|\/|%|<=|<|==|=|>=|>|<<|>>|&|\^|\||~|&&|\|\||!|\?|:|,|\.|->|\(|\)|\[|\]|\{|\}
+operator \+|-|\*|\/|%|<=|<|==|=|>=|>|<<|>>|&|\^|\||~|&&|\|\||!|\?|:|,|\.|->|\(|\)|\[|\]|\{|\}|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\^=|\|=|<<=|>>=
 whitespace {delim}+
 str \"[^"]*\"
+char \'[^']*\'
 preprocessor #(.|\\\n)*\n
 other .
 
@@ -67,6 +68,18 @@ other .
     if (!strcmp(yytext, "&&")) return AND;
     if (!strcmp(yytext, "||")) return OR;
     if (!strcmp(yytext, "->")) return ARROW;
+    if (!strcmp(yytext, "++")) return INC;
+    if (!strcmp(yytext, "--")) return DEC;
+    if (!strcmp(yytext, "+=")) return ADD_ASSIGN;
+    if (!strcmp(yytext, "-=")) return SUB_ASSIGN;
+    if (!strcmp(yytext, "*=")) return MUL_ASSIGN;
+    if (!strcmp(yytext, "/=")) return DIV_ASSIGN;
+    if (!strcmp(yytext, "%=")) return MOD_ASSIGN;
+    if (!strcmp(yytext, "&=")) return AND_ASSIGN;
+    if (!strcmp(yytext, "^=")) return XOR_ASSIGN;
+    if (!strcmp(yytext, "|=")) return OR_ASSIGN;
+    if (!strcmp(yytext, "<<=")) return SHL_ASSIGN;
+    if (!strcmp(yytext, ">>=")) return SHR_ASSIGN;
     return *yytext;
 }
 {whitespace} {
@@ -85,6 +98,10 @@ other .
     }
     name[p] = '\0';
     return STR;
+}
+{char} {
+    num = yytext[1];
+    return CHAR;
 }
 {semicolon} {
     //printf("%d:(Semicolon, %s)\n", line, yytext);

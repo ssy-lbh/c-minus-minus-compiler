@@ -10,6 +10,7 @@
 %token FLOAT
 
 %token STR
+%token CHAR
 
 %token LE
 %token GE
@@ -20,18 +21,30 @@
 %token AND
 %token OR
 %token ARROW
+%token INC
+%token DEC
+%token ADD_ASSIGN
+%token SUB_ASSIGN
+%token MUL_ASSIGN
+%token DIV_ASSIGN
+%token MOD_ASSIGN
+%token SHL_ASSIGN
+%token SHR_ASSIGN
+%token AND_ASSIGN
+%token XOR_ASSIGN
+%token OR_ASSIGN
 
 %left ';'
 %left IF ELSE WHILE RETURN
 %left '(' ')' '[' ']' '{' '}'
 %left ','
-%right '='
+%right '=' ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN SHL_ASSIGN SHR_ASSIGN AND_ASSIGN XOR_ASSIGN OR_ASSIGN
 %left AND OR
 %left '<' '>' LE GE EQ NE SHL SHR
 %left '^' '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
-%left '~' '!'
+%left '~' '!' INC DEC
 %left '.' ARROW
 
 %{
@@ -113,6 +126,7 @@ func_name:
     ;
 expr:
     NUMBER { $$ = ir_expr_imm(num); }
+    | CHAR { $$ = ir_expr_imm(num); }
     | NAME { $$ = ir_expr_var(ir_func_ctx_get_local(f_stack[f_top], name)); }
     | STR { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_lea($$, name)); }
     | expr '=' expr { ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_MOV, $1, $3)); $$ = $1; }
@@ -130,6 +144,7 @@ expr:
     | expr SHL expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SHL, $$, $1, $3)); }
     | expr SHR expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SHR, $$, $1, $3)); }
     | '-' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_NEG, $$, $2)); }
+    | '+' expr { $$ = $2; }
     | '~' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_NOT, $$, $2)); }
     | '!' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_LOGIC_NOT, $$, $2)); }
     | expr '&' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_AND, $$, $1, $3)); }
@@ -137,6 +152,20 @@ expr:
     | expr '^' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_XOR, $$, $1, $3)); }
     | expr AND expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_LOGIC_AND, $$, $1, $3)); }
     | expr OR expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_LOGIC_OR, $$, $1, $3)); }
+    | expr INC { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_ADD, $1, $1, ir_expr_imm(1))); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_MOV, $$, $1)); }
+    | expr DEC { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SUB, $1, $1, ir_expr_imm(1))); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_MOV, $$, $1)); }
+    | INC expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_ADD, $2, $2, ir_expr_imm(1))); $$ = $2; }
+    | DEC expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SUB, $2, $2, ir_expr_imm(1))); $$ = $2; }
+    | expr ADD_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_ADD, $1, $1, $3)); $$ = $1; }
+    | expr SUB_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SUB, $1, $1, $3)); $$ = $1; }
+    | expr MUL_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_MUL, $1, $1, $3)); $$ = $1; }
+    | expr DIV_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_DIV, $1, $1, $3)); $$ = $1; }
+    | expr MOD_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_MOD, $1, $1, $3)); $$ = $1; }
+    | expr SHL_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SHL, $1, $1, $3)); $$ = $1; }
+    | expr SHR_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_SHR, $1, $1, $3)); $$ = $1; }
+    | expr AND_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_AND, $1, $1, $3)); $$ = $1; }
+    | expr XOR_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_XOR, $1, $1, $3)); $$ = $1; }
+    | expr OR_ASSIGN expr { ir_func_add_code(f_stack[f_top]->f, ir_new3(IR_OR, $1, $1, $3)); $$ = $1; }
     | '(' expr ')' { $$ = $2; }
     | '&' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); if ($2.is_imm){ printf("'&' could not be used on an immediate number\n"); exit(1); } ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_ADDR, $$, $2)); }
     | '*' expr { $$ = ir_expr_var(ir_func_ctx_inc_local(f_stack[f_top])); ir_func_add_code(f_stack[f_top]->f, ir_new2(IR_DEREF, $$, $2)); }

@@ -63,16 +63,29 @@ extern int yydebug;
     INT = 264,                     /* INT  */
     FLOAT = 265,                   /* FLOAT  */
     STR = 266,                     /* STR  */
-    LE = 267,                      /* LE  */
-    GE = 268,                      /* GE  */
-    EQ = 269,                      /* EQ  */
-    NE = 270,                      /* NE  */
-    SHL = 271,                     /* SHL  */
-    SHR = 272,                     /* SHR  */
-    AND = 273,                     /* AND  */
-    OR = 274,                      /* OR  */
-    ARROW = 275,                   /* ARROW  */
-    ELSE = 276                     /* ELSE  */
+    CHAR = 267,                    /* CHAR  */
+    LE = 268,                      /* LE  */
+    GE = 269,                      /* GE  */
+    EQ = 270,                      /* EQ  */
+    NE = 271,                      /* NE  */
+    SHL = 272,                     /* SHL  */
+    SHR = 273,                     /* SHR  */
+    AND = 274,                     /* AND  */
+    OR = 275,                      /* OR  */
+    ARROW = 276,                   /* ARROW  */
+    INC = 277,                     /* INC  */
+    DEC = 278,                     /* DEC  */
+    ADD_ASSIGN = 279,              /* ADD_ASSIGN  */
+    SUB_ASSIGN = 280,              /* SUB_ASSIGN  */
+    MUL_ASSIGN = 281,              /* MUL_ASSIGN  */
+    DIV_ASSIGN = 282,              /* DIV_ASSIGN  */
+    MOD_ASSIGN = 283,              /* MOD_ASSIGN  */
+    SHL_ASSIGN = 284,              /* SHL_ASSIGN  */
+    SHR_ASSIGN = 285,              /* SHR_ASSIGN  */
+    AND_ASSIGN = 286,              /* AND_ASSIGN  */
+    XOR_ASSIGN = 287,              /* XOR_ASSIGN  */
+    OR_ASSIGN = 288,               /* OR_ASSIGN  */
+    ELSE = 289                     /* ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -81,13 +94,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 63 "parse.y"
+#line 76 "parse.y"
 
     long long num;
     char* name;
     expr_info value;
 
-#line 91 "parse.tab.h"
+#line 104 "parse.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
