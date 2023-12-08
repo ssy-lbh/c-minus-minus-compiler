@@ -32,25 +32,46 @@ static void vm_native_println(vm_ctx* ctx){
     ctx->vars[0] = puts((char*)ctx->vars[0]);
 }
 
+static void vm_native_getchar(vm_ctx* ctx){
+    ctx->vars[0] = getchar();
+}
+
 void vm_add_native(ir_program* prog){
     ir_program_add_func(prog, ir_func_new_native("input", 0, vm_native_input));
     ir_program_add_func(prog, ir_func_new_native("output", 1, vm_native_output));
     ir_program_add_func(prog, ir_func_new_native("putchar", 1, vm_native_putchar));
     ir_program_add_func(prog, ir_func_new_native("print", 1, vm_native_print));
     ir_program_add_func(prog, ir_func_new_native("println", 1, vm_native_println));
+    ir_program_add_func(prog, ir_func_new_native("getchar", 0, vm_native_getchar));
 }
 
 static var_t* vm_fetch_ptr(vm_ctx* ctx, expr_info e){
-    if (e.is_ref) return &ctx->vars[ctx->vars[e.ival]];
-    if (e.is_var) return &ctx->vars[e.ival];
-    return NULL;
+    switch (e.type){
+    case EXPR_REF:
+        return &ctx->vars[ctx->vars[e.ival]];
+    case EXPR_VAR:
+        return &ctx->vars[e.ival];
+    case EXPR_PTR:
+        return (var_t*)ctx->vars[e.ival];
+    default:
+        return NULL;
+    }
 }
 
 static var_t vm_fetch_val(vm_ctx* ctx, expr_info e){
-    if (e.is_imm) return e.ival;
-    if (e.is_ref) return ctx->vars[ctx->vars[e.ival]];
-    if (e.is_var) return ctx->vars[e.ival];
-    return 0;
+    switch (e.type){
+    case EXPR_IMM:
+        return e.ival;
+    case EXPR_REF:
+        return ctx->vars[ctx->vars[e.ival]];
+    case EXPR_VAR:
+        return ctx->vars[e.ival];
+    case EXPR_PTR:
+        return *(var_t*)ctx->vars[e.ival];
+    default:
+        puts("vm_fetch_val unknown type");
+        return 0;
+    }
 }
 
 var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
@@ -63,15 +84,15 @@ var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
     }
     while (1){
         ir i = f->code[ctx->pc];
-        // printf("PC: %d\n", ctx->pc);
-        // ir_print(i);
+        //printf("PC: %d\n", ctx->pc);
+        //ir_print(i);
 
         var_t* op1_ptr = vm_fetch_ptr(ctx, i.op1);
         var_t op2_val = vm_fetch_val(ctx, i.op2);
         var_t op3_val = vm_fetch_val(ctx, i.op3);
-        // printf("OP1 %lld\n", (var_t)(op1_ptr - ctx->vars));
-        // printf("OP2 %lld\n", op2_val);
-        // printf("OP3 %lld\n", op3_val);
+        //printf("OP1 %p | %lld\n", op1_ptr, (var_t)(op1_ptr - ctx->vars));
+        //printf("OP2 %lld\n", op2_val);
+        //printf("OP3 %lld\n", op3_val);
 
         switch (i.ins){
             case IR_JMP:
@@ -172,10 +193,12 @@ var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
                 *op1_ptr = !op2_val;
                 break;
             case IR_ADDR:
-                if (i.op2.is_ref){
+                if (i.op2.type == EXPR_REF){
                     *op1_ptr = (ptr_t)(ctx->vars + ctx->vars[i.op2.ival]);
-                } else if (i.op2.is_var) {
+                } else if (i.op2.type == EXPR_VAR) {
                     *op1_ptr = (ptr_t)(ctx->vars + i.op2.ival);
+                } else if (i.op2.type == EXPR_PTR){
+                    *op1_ptr = (ptr_t)i.op2.ival;
                 } else {
                     printf("'&' could not be used on an immediate number\n");
                     return -1;
@@ -189,7 +212,7 @@ var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
                 //printf("LEA %p\n", (char*)*op1_ptr);
                 break;
             default:
-                printf("unknown instruction: %d\n", i.ins);
+                printf("unknown instruction: %d at Function %s PC %d\n", i.ins, entry, ctx->pc);
                 return -1;
         }
         ctx->pc++;

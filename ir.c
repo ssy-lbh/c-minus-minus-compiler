@@ -2,55 +2,49 @@
 
 expr_info ir_expr(){
     expr_info e;
-    e.is_imm = 0;
-    e.is_ref = 0;
-    e.is_var = 1;
+    e.type = EXPR_VAR;
     return e;
 }
 
 char ir_expr_type(expr_info e){
-    if(e.is_imm){
+    switch (e.type){
+    case EXPR_IMM:
         return 'i';
-    }else if(e.is_ref){
+    case EXPR_REF:
         return 'r';
-    }else if(e.is_var){
+    case EXPR_VAR:
         return 'v';
+    case EXPR_PTR:
+        return 'p';
+    default:
+        return '?';
     }
-    return '?';
 }
 
 expr_info ir_expr_imm(var_t ival){
     expr_info e;
-    e.is_imm = 1;
-    e.is_ref = 0;
-    e.is_var = 0;
+    e.type = EXPR_IMM;
     e.ival = ival;
     return e;
 }
 
 expr_info ir_expr_var(var_t id){
     expr_info e;
-    e.is_imm = 0;
-    e.is_ref = 0;
-    e.is_var = 1;
+    e.type = EXPR_VAR;
     e.ival = id;
     return e;
 }
 
 expr_info ir_expr_ref(var_t id){
     expr_info e;
-    e.is_imm = 0;
-    e.is_ref = 1;
-    e.is_var = 0;
+    e.type = EXPR_REF;
     e.ival = id;
     return e;
 }
 
 expr_info ir_expr_ptr(var_t id){
     expr_info e;
-    e.is_imm = 0;
-    e.is_ref = 0;
-    e.is_var = 1;
+    e.type = EXPR_PTR;
     e.ival = id;
     return e;
 }
@@ -144,7 +138,9 @@ ir ir_call(char *func_name, var_t retid){
     i.ins = IR_CALL;
     i.op = strdup(func_name);
     i.op1.ival = retid;
-    i.op1.is_var = 1;
+    i.op1.type = EXPR_VAR;
+    i.op2 = ir_expr_imm(0);
+    i.op3 = ir_expr_imm(0);
     return i;
 }
 
@@ -153,6 +149,8 @@ ir ir_lea(expr_info op1, char *str){
     i.ins = IR_LEA;
     i.op = strdup(str);
     i.op1 = op1;
+    i.op2 = ir_expr_imm(0);
+    i.op3 = ir_expr_imm(0);
     return i;
 }
 

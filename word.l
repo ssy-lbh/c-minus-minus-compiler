@@ -28,7 +28,7 @@ semicolon [\;]
 
 number {digit}+
 name ({letter}|_)({letter}|{digit}|_)*
-operator \+|-|\*|\/|%|<=|<|==|=|>=|>|<<|>>|&|\^|\||~|&&|\|\||!|\?|:|,|\.|->|\(|\)|\[|\]|\{|\}|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\^=|\|=|<<=|>>=
+operator \+|-|\*|\/|%|<=|<|==|!=|=|>=|>|<<|>>|&|\^|\||~|&&|\|\||!|\?|:|,|\.|->|\(|\)|\[|\]|\{|\}|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\^=|\|=|<<=|>>=
 whitespace {delim}+
 str \"[^"]*\"
 char \'[^']*\'
@@ -37,16 +37,18 @@ other .
 
 %%
 {number} {
-    //printf("%d:(Number, %s)\n", line, yytext);
+    printf("%d:(Number, %s)\n", line, yytext);
 
     num = strtol(yytext, NULL, 10);
     return NUMBER;
 }
 {name} {
-    //printf("%d:(Name, %s)\n", line, yytext);
+    printf("%d:(Name, %s)\n", line, yytext);
     
     if (!strcmp(yytext, "while")) return WHILE;
     if (!strcmp(yytext, "if")) return IF;
+    if (!strcmp(yytext, "else")) return ELSE;
+    if (!strcmp(yytext, "for")) return FOR;
 
     if (!strcmp(yytext, "return")) return RETURN;
 
@@ -58,7 +60,7 @@ other .
     return NAME;
 }
 {operator} {
-    //printf("%d:(Operator, %s)\n", line, yytext);
+    printf("%d:(Operator, %s)\n", line, yytext);
     if (!strcmp(yytext, "<=")) return LE;
     if (!strcmp(yytext, ">=")) return GE;
     if (!strcmp(yytext, "==")) return EQ;
@@ -83,14 +85,14 @@ other .
     return *yytext;
 }
 {whitespace} {
-    //printf("%d:(Whitespace)\n", line);
+    printf("%d:(Whitespace)\n", line);
     size_t len = strlen(yytext);
     for (size_t i = 0; i < len; i++) {
         if (yytext[i] == '\n') line++;
     }
 }
 {str} {
-    //printf("%d:(String, %s)\n", line, yytext);
+    printf("%d:(String, %s)\n", line, yytext);
     size_t len = strlen(yytext);
     size_t p = 0;
     for (size_t i = 1; i < len - 1; i++, p++) {
@@ -104,7 +106,7 @@ other .
     return CHAR;
 }
 {semicolon} {
-    //printf("%d:(Semicolon, %s)\n", line, yytext);
+    printf("%d:(Semicolon, %s)\n", line, yytext);
     return ';';
 }
 {line_comment} {
