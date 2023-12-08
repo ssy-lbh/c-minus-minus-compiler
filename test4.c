@@ -1,22 +1,22 @@
 int strcmp(int* a, int* b){
-    while((*a & 255) && (*b & 255)){
-        if ((*a & 255) != (*b & 255)){
+    while((*a & 0xFF) && (*b & 0xFF)){
+        if ((*a & 0xFF) != (*b & 0xFF)){
             return 1;
         }
         a++;
         b++;
     }
-    return (*a & 255) != (*b & 255);
+    return (*a & 0xFF) != (*b & 0xFF);
 }
 
 int getline(int* s){
     int c;
     int i = 0;
-    while((c = getchar()) != 10){
+    while((c = getchar()) != '\n'){
         *(s + i) = c;
         i++;
     }
-    *(s + i) = 0;
+    *(s + i) = '\0';
     return i;
 }
 
@@ -37,10 +37,10 @@ int main(){
         i++;
     }
 
-    putchar(10);
+    putchar('\n');
 
-    int s1[100];
-    int s2[100];
+    int s1[0x40];
+    int s2[0x40];
 
     //output(&s1);
 

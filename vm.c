@@ -36,6 +36,14 @@ static void vm_native_getchar(vm_ctx* ctx){
     ctx->vars[0] = getchar();
 }
 
+static void vm_native_malloc(vm_ctx* ctx){
+    ctx->vars[0] = (var_t)malloc(ctx->vars[0] * sizeof(var_t));
+}
+
+static void vm_native_free(vm_ctx* ctx){
+    free((void*)ctx->vars[0]);
+}
+
 void vm_add_native(ir_program* prog){
     ir_program_add_func(prog, ir_func_new_native("input", 0, vm_native_input));
     ir_program_add_func(prog, ir_func_new_native("output", 1, vm_native_output));
@@ -43,6 +51,8 @@ void vm_add_native(ir_program* prog){
     ir_program_add_func(prog, ir_func_new_native("print", 1, vm_native_print));
     ir_program_add_func(prog, ir_func_new_native("println", 1, vm_native_println));
     ir_program_add_func(prog, ir_func_new_native("getchar", 0, vm_native_getchar));
+    ir_program_add_func(prog, ir_func_new_native("malloc", 1, vm_native_malloc));
+    ir_program_add_func(prog, ir_func_new_native("free", 1, vm_native_free));
 }
 
 static var_t* vm_fetch_ptr(vm_ctx* ctx, expr_info e){
@@ -77,6 +87,10 @@ static var_t vm_fetch_val(vm_ctx* ctx, expr_info e){
 var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
     ir_func* f = *(ir_func**)dict_get(prog->func_dict, entry);
     vm_ctx* call_ctx = NULL;
+    if (!f){
+        printf("function %s not found\n", entry);
+        return -1;
+    }
     if (f->native_func){
         void(*func)(vm_ctx*) = f->native_func;
         func(ctx);

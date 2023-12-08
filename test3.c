@@ -1,15 +1,3 @@
-int pow(int x, int y){
-    int result = 1;
-    while (y){
-        if (y & 1){
-            result = result * x;
-        }
-        y = y >> 1;
-        x = x * x;
-    }
-    return result;
-}
-
 int modpow(int x, int y, int p){
     int result = 1;
     while (y){
@@ -60,7 +48,7 @@ int modsqrt(int x, int p){
     if (x == 0){
         return 0;
     }
-    if (pow(x, (p - 1) / 2) == p - 1){
+    if (modpow(x, (p - 1) / 2, p) == p - 1){
         return -1;
     }
     int i = 1;
@@ -69,7 +57,7 @@ int modsqrt(int x, int p){
         if (tmp == 0){
             return i;
         }
-        if (pow(tmp, (p - 1) / 2) == p - 1){
+        if (modpow(tmp, (p - 1) / 2, p) == p - 1){
             return cpow(i, tmp, (p + 1) / 2, p);
         }
         i = i + 1;
@@ -78,8 +66,10 @@ int modsqrt(int x, int p){
 }
 
 int main(){
-    int mod = 6581;
+    int mod = 104857601;
     int r = modsqrt(5, mod);
+    print("r = ");
+    output(r);
     // calculate the fibonacci number (mod 6581)
     int n = input();
     int inv2 = modpow(2, mod - 2, mod);

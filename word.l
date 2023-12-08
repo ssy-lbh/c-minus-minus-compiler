@@ -16,6 +16,24 @@ int line = 1;
 
 long num;
 char name[1000];
+
+char translate(char c){
+    switch (c){
+    case 'n': return '\n';
+    case 'r': return '\r';
+    case 't': return '\t';
+    case 'b': return '\b';
+    case '0': return '\0';
+    case 'a': return '\a';
+    case '\"': return '\"';
+    case '\'': return '\'';
+    case '\\': return '\\';
+    case 'f': return '\f';
+    case 'v': return '\v';
+    }
+    printf("Unknown character '\\%c'\n", c);
+    return '\0';
+}
 %}
 
 line_comment (\/\/.*\n)
@@ -26,20 +44,42 @@ letter [a-zA-Z]
 delim [ \r\t\n]
 semicolon [\;]
 
-number {digit}+
+int2 (0[Bb]([0-1])+)
+int8 (0([0-7])+)
+int10 ([1-9]|[1-9]([0-9])+|0)
+int16 (0[xX]([A-Fa-f0-9])+)
+
 name ({letter}|_)({letter}|{digit}|_)*
 operator \+|-|\*|\/|%|<=|<|==|!=|=|>=|>|<<|>>|&|\^|\||~|&&|\|\||!|\?|:|,|\.|->|\(|\)|\[|\]|\{|\}|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\^=|\|=|<<=|>>=
 whitespace {delim}+
-str \"[^"]*\"
-char \'[^']*\'
+str \"([^"]|\\\")*\"
+char \'([^']|\\\')*\'
 preprocessor #(.|\\\n)*\n
 other .
 
 %%
-{number} {
-    printf("%d:(Number, %s)\n", line, yytext);
+{int2} {
+    printf("%d:(Int2, %s)\n", line, yytext);
+
+    num = strtol(yytext + 2, NULL, 2);
+    return NUMBER;
+}
+{int8} {
+    printf("%d:(Int8, %s)\n", line, yytext);
+
+    num = strtol(yytext + 1, NULL, 8);
+    return NUMBER;
+}
+{int10} {
+    printf("%d:(Int10, %s)\n", line, yytext);
 
     num = strtol(yytext, NULL, 10);
+    return NUMBER;
+}
+{int16} {
+    printf("%d:(Int16, %s)\n", line, yytext);
+
+    num = strtol(yytext + 2, NULL, 16);
     return NUMBER;
 }
 {name} {
@@ -96,6 +136,10 @@ other .
     size_t len = strlen(yytext);
     size_t p = 0;
     for (size_t i = 1; i < len - 1; i++, p++) {
+        if (yytext[i] == '\\'){
+            name[p] = translate(yytext[++i]);
+            continue;
+        }
         name[p] = yytext[i];
     }
     name[p] = '\0';
@@ -103,6 +147,8 @@ other .
 }
 {char} {
     num = yytext[1];
+    if (yytext[1] == '\\')
+        num = translate(yytext[2]);
     return CHAR;
 }
 {semicolon} {

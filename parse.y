@@ -210,6 +210,7 @@ constexpr:
     | constexpr SHL constexpr { $$ = $1 << $3; }
     | constexpr SHR constexpr { $$ = $1 >> $3; }
     | '-' constexpr { $$ = -$2; }
+    | '+' constexpr { $$ = $2; }
     | '~' constexpr { $$ = ~$2; }
     | '!' constexpr { $$ = !$2; }
     | constexpr '&' constexpr { $$ = $1 & $3; }
