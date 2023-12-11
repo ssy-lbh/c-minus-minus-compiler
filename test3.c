@@ -70,7 +70,7 @@ int main(){
     int r = modsqrt(5, mod);
     print("r = ");
     output(r);
-    // calculate the fibonacci number (mod 6581)
+    // calculate the fibonacci number (mod 104857601)
     int n = input();
     int inv2 = modpow(2, mod - 2, mod);
     int a = modpow((1 + r) * inv2 % mod, n, mod);
