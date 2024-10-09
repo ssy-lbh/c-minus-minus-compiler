@@ -44,6 +44,20 @@ typedef enum _ir_code {
     IR_ADDR,
     IR_DEREF,
     IR_LEA,
+    IR_I2F,
+    IR_F2I,
+    IR_FADD,
+    IR_FSUB,
+    IR_FMUL,
+    IR_FDIV,
+    IR_FNEG,
+    IR_FLT,
+    IR_FGT,
+    IR_FLE,
+    IR_FGE,
+    IR_FEQ,
+    IR_FNE,
+    IR_FMOD,
 } ir_code;
 
 // JMPX [addr] [cond]
@@ -79,6 +93,7 @@ typedef struct _ir_program {
 expr_info ir_expr();
 char ir_expr_type(expr_info e);
 expr_info ir_expr_imm(var_t ival);
+expr_info ir_expr_fimm(real_t rval);
 expr_info ir_expr_var(var_t id);
 expr_info ir_expr_ref(var_t id);
 expr_info ir_expr_ptr(var_t id);
@@ -100,7 +115,9 @@ void ir_program_add_func(ir_program *p, ir_func *f);
 int ir_func_add_code(ir_func *f, ir i);
 int ir_func_ctx_inc_local(ir_func_ctx *ctx);
 int ir_func_ctx_add_local(ir_func_ctx *ctx, char *name, int size);
+int ir_func_ctx_add_flocal(ir_func_ctx *ctx, char *name, int size);
 int ir_func_ctx_get_local(ir_func_ctx *ctx, char *name);
+int ir_func_ctx_get_flag(ir_func_ctx *ctx, char *name);
 
 void ir_func_ctx_free(ir_func_ctx *ctx);
 void ir_program_free(ir_program *p);

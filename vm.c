@@ -1,5 +1,7 @@
 #include "vm.h"
 
+#include <math.h>
+
 vm_ctx* vm_ctx_new(){
     vm_ctx* ctx = (vm_ctx*)malloc(sizeof(vm_ctx));
     ctx->pc = 0;
@@ -44,6 +46,54 @@ static void vm_native_free(vm_ctx* ctx){
     free((void*)ctx->vars[0]);
 }
 
+static void vm_native_exit(vm_ctx* ctx){
+    exit(ctx->vars[0]);
+}
+
+static void vm_native_printf(vm_ctx* ctx){
+    const char* format = (const char*)ctx->vars[0];
+    int i = 1;
+    ctx->vars[0] = 0;
+    while (*format){
+        if (*format == '%'){
+            format++;
+            if (*format == 'd'){
+                ctx->vars[0] += printf("%lld", ctx->vars[i++]);
+            } else if (*format == 'f'){
+                ctx->vars[0] += printf("%f", REAL(ctx->vars[i++]));
+            } else if (*format == 's'){
+                ctx->vars[0] += printf("%s", (char*)ctx->vars[i++]);
+            }
+            format++;
+        } else {
+            putchar(*format);
+            ctx->vars[0]++;
+            format++;
+        }
+    }
+}
+
+static void vm_native_scanf(vm_ctx* ctx){
+    const char* format = (const char*)ctx->vars[0];
+    int i = 1;
+    while (*format){
+        if (*format == '%'){
+            format++;
+            if (*format == 'd'){
+                scanf("%lld", (var_t*)ctx->vars[i++]);
+            } else if (*format == 'f'){
+                scanf("%lf", (real_t*)ctx->vars[i++]);
+            } else if (*format == 's'){
+                scanf("%s", (char*)ctx->vars[i++]);
+            }
+            format++;
+        } else {
+            format++;
+        }
+    }
+    ctx->vars[0] = i - 1;
+}
+
 void vm_add_native(ir_program* prog){
     ir_program_add_func(prog, ir_func_new_native("input", 0, vm_native_input));
     ir_program_add_func(prog, ir_func_new_native("output", 1, vm_native_output));
@@ -53,6 +103,9 @@ void vm_add_native(ir_program* prog){
     ir_program_add_func(prog, ir_func_new_native("getchar", 0, vm_native_getchar));
     ir_program_add_func(prog, ir_func_new_native("malloc", 1, vm_native_malloc));
     ir_program_add_func(prog, ir_func_new_native("free", 1, vm_native_free));
+    ir_program_add_func(prog, ir_func_new_native("exit", 1, vm_native_exit));
+    ir_program_add_func(prog, ir_func_new_native("printf", 10, vm_native_printf));
+    ir_program_add_func(prog, ir_func_new_native("scanf", 10, vm_native_scanf));
 }
 
 static var_t* vm_fetch_ptr(vm_ctx* ctx, expr_info e){
@@ -224,6 +277,48 @@ var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
             case IR_LEA:
                 *op1_ptr = (var_t)i.op;
                 //printf("LEA %p\n", (char*)*op1_ptr);
+                break;
+            case IR_I2F:
+                REAL(*op1_ptr) = (real_t)op2_val;
+                break;
+            case IR_F2I:
+                *op1_ptr = (var_t)REAL(op2_val);
+                break;
+            case IR_FADD:
+                REAL(*op1_ptr) = REAL(op2_val) + REAL(op3_val);
+                break;
+            case IR_FSUB:
+                REAL(*op1_ptr) = REAL(op2_val) - REAL(op3_val);
+                break;
+            case IR_FMUL:
+                REAL(*op1_ptr) = REAL(op2_val) * REAL(op3_val);
+                break;
+            case IR_FDIV:
+                REAL(*op1_ptr) = REAL(op2_val) / REAL(op3_val);
+                break;
+            case IR_FNEG:
+                REAL(*op1_ptr) = -REAL(op2_val);
+                break;
+            case IR_FLT:
+                *op1_ptr = REAL(op2_val) < REAL(op3_val);
+                break;
+            case IR_FGT:
+                *op1_ptr = REAL(op2_val) > REAL(op3_val);
+                break;
+            case IR_FLE:
+                *op1_ptr = REAL(op2_val) <= REAL(op3_val);
+                break;
+            case IR_FGE:
+                *op1_ptr = REAL(op2_val) >= REAL(op3_val);
+                break;
+            case IR_FEQ:
+                *op1_ptr = REAL(op2_val) == REAL(op3_val);
+                break;
+            case IR_FNE:
+                *op1_ptr = REAL(op2_val) != REAL(op3_val);
+                break;
+            case IR_FMOD:
+                REAL(*op1_ptr) = fmod(REAL(op2_val), REAL(op3_val));
                 break;
             default:
                 printf("unknown instruction: %d at Function %s PC %d\n", i.ins, entry, ctx->pc);

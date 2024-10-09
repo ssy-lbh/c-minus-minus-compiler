@@ -15,7 +15,13 @@ void yyerror(char *s);
 int line = 1;
 
 long num;
+double real;
 char name[1000];
+
+ir_program *program = NULL;
+
+ir_func_ctx *f_stack[0x40];
+int f_top = -1;
 
 char translate(char c){
     switch (c){
@@ -48,6 +54,8 @@ int2 (0[Bb]([0-1])+)
 int8 (0([0-7])+)
 int10 ([1-9]|[1-9]([0-9])+|0)
 int16 (0[xX]([A-Fa-f0-9])+)
+
+real ([0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?|[0-9]+[eE][+-]?[0-9]+)
 
 name ({letter}|_)({letter}|{digit}|_)*
 operator \+|-|\*|\/|%|<=|<|==|!=|=|>=|>|<<|>>|&|\^|\||~|&&|\|\||!|\?|:|,|\.|->|\(|\)|\[|\]|\{|\}|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\^=|\|=|<<=|>>=
@@ -82,6 +90,12 @@ other .
     num = strtol(yytext + 2, NULL, 16);
     return NUMBER;
 }
+{real} {
+    printf("%d:(Real, %s)\n", line, yytext);
+
+    real = strtod(yytext, NULL);
+    return REAL;
+}
 {name} {
     printf("%d:(Name, %s)\n", line, yytext);
     
@@ -93,10 +107,13 @@ other .
     if (!strcmp(yytext, "return")) return RETURN;
 
     if (!strcmp(yytext, "void")) return VOID;
-    if (!strcmp(yytext, "int")) return INT;
+    if (!strcmp(yytext, "int") || !strcmp(yytext, "char")) return INT;
     if (!strcmp(yytext, "float")) return FLOAT;
 
     strcpy(name, yytext);
+
+    if (f_top >= 0 && ir_func_ctx_get_flag(f_stack[f_top], yytext)) return FNAME;
+
     return NAME;
 }
 {operator} {
@@ -173,3 +190,24 @@ other .
 void yyerror(char *s){
     fprintf(stderr, "Error: %s\n", s);
 }
+
+/*
+int main(int argc, char **argv){
+    if (argc < 2){
+        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *f = fopen(argv[1], "r");
+    if (!f){
+        fprintf(stderr, "Error: Cannot open file '%s'\n", argv[1]);
+        return 1;
+    }
+
+    yyin = f;
+    while (yylex() != 0);
+    fclose(f);
+
+    return 0;
+}
+*/

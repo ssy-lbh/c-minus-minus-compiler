@@ -55,38 +55,40 @@ extern int yydebug;
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
     NUMBER = 258,                  /* NUMBER  */
-    NAME = 259,                    /* NAME  */
-    IF = 260,                      /* IF  */
-    ELSE = 261,                    /* ELSE  */
-    WHILE = 262,                   /* WHILE  */
-    FOR = 263,                     /* FOR  */
-    RETURN = 264,                  /* RETURN  */
-    VOID = 265,                    /* VOID  */
-    INT = 266,                     /* INT  */
-    FLOAT = 267,                   /* FLOAT  */
-    STR = 268,                     /* STR  */
-    CHAR = 269,                    /* CHAR  */
-    LE = 270,                      /* LE  */
-    GE = 271,                      /* GE  */
-    EQ = 272,                      /* EQ  */
-    NE = 273,                      /* NE  */
-    SHL = 274,                     /* SHL  */
-    SHR = 275,                     /* SHR  */
-    AND = 276,                     /* AND  */
-    OR = 277,                      /* OR  */
-    ARROW = 278,                   /* ARROW  */
-    INC = 279,                     /* INC  */
-    DEC = 280,                     /* DEC  */
-    ADD_ASSIGN = 281,              /* ADD_ASSIGN  */
-    SUB_ASSIGN = 282,              /* SUB_ASSIGN  */
-    MUL_ASSIGN = 283,              /* MUL_ASSIGN  */
-    DIV_ASSIGN = 284,              /* DIV_ASSIGN  */
-    MOD_ASSIGN = 285,              /* MOD_ASSIGN  */
-    SHL_ASSIGN = 286,              /* SHL_ASSIGN  */
-    SHR_ASSIGN = 287,              /* SHR_ASSIGN  */
-    AND_ASSIGN = 288,              /* AND_ASSIGN  */
-    XOR_ASSIGN = 289,              /* XOR_ASSIGN  */
-    OR_ASSIGN = 290                /* OR_ASSIGN  */
+    REAL = 259,                    /* REAL  */
+    NAME = 260,                    /* NAME  */
+    FNAME = 261,                   /* FNAME  */
+    IF = 262,                      /* IF  */
+    ELSE = 263,                    /* ELSE  */
+    WHILE = 264,                   /* WHILE  */
+    FOR = 265,                     /* FOR  */
+    RETURN = 266,                  /* RETURN  */
+    VOID = 267,                    /* VOID  */
+    INT = 268,                     /* INT  */
+    FLOAT = 269,                   /* FLOAT  */
+    STR = 270,                     /* STR  */
+    CHAR = 271,                    /* CHAR  */
+    LE = 272,                      /* LE  */
+    GE = 273,                      /* GE  */
+    EQ = 274,                      /* EQ  */
+    NE = 275,                      /* NE  */
+    SHL = 276,                     /* SHL  */
+    SHR = 277,                     /* SHR  */
+    AND = 278,                     /* AND  */
+    OR = 279,                      /* OR  */
+    ARROW = 280,                   /* ARROW  */
+    INC = 281,                     /* INC  */
+    DEC = 282,                     /* DEC  */
+    ADD_ASSIGN = 283,              /* ADD_ASSIGN  */
+    SUB_ASSIGN = 284,              /* SUB_ASSIGN  */
+    MUL_ASSIGN = 285,              /* MUL_ASSIGN  */
+    DIV_ASSIGN = 286,              /* DIV_ASSIGN  */
+    MOD_ASSIGN = 287,              /* MOD_ASSIGN  */
+    SHL_ASSIGN = 288,              /* SHL_ASSIGN  */
+    SHR_ASSIGN = 289,              /* SHR_ASSIGN  */
+    AND_ASSIGN = 290,              /* AND_ASSIGN  */
+    XOR_ASSIGN = 291,              /* XOR_ASSIGN  */
+    OR_ASSIGN = 292                /* OR_ASSIGN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -95,13 +97,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 78 "parse.y"
+#line 82 "parse.y"
 
     long long num;
     char* name;
     expr_info value;
 
-#line 105 "parse.tab.h"
+#line 107 "parse.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -1,16 +1,16 @@
-int strcmp(int* a, int* b){
-    while((*a & 0xFF) && (*b & 0xFF)){
-        if ((*a & 0xFF) != (*b & 0xFF)){
+int strcmp(char* a, char* b){
+    while(*a && *b){
+        if (*a != *b){
             return 1;
         }
         a++;
         b++;
     }
-    return (*a & 0xFF) != (*b & 0xFF);
+    return *a != *b;
 }
 
-int getline(int* s){
-    int c;
+int getline(char* s){
+    char c;
     int i = 0;
     while((c = getchar()) != '\n'){
         *(s + i) = c;
@@ -25,7 +25,7 @@ int main(){
     int i = 0;
 
     while(i < 4){
-        print("input: ");
+        print("input 4 numbers: ");
         a[i] = input();
         i++;
     }
@@ -39,8 +39,8 @@ int main(){
 
     putchar('\n');
 
-    int s1[0x40];
-    int s2[0x40];
+    char s1[0x40];
+    char s2[0x40];
 
     //output(&s1);
 

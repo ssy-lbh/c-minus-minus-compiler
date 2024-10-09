@@ -2,6 +2,7 @@
 #define _TYPES_H
 
 typedef long long var_t;
+typedef double real_t;
 typedef unsigned long long ptr_t;
 typedef unsigned char enum_t;
 
@@ -11,8 +12,13 @@ typedef unsigned char enum_t;
 #define EXPR_PTR 3
 
 typedef struct _expr_info {
-    var_t ival;
+    union {
+        var_t ival;
+        real_t rval;
+    };
     unsigned char type;
 } expr_info;
+
+#define REAL(x) (*(real_t*)&(x))
 
 #endif

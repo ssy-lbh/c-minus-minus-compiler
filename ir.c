@@ -28,6 +28,13 @@ expr_info ir_expr_imm(var_t ival){
     return e;
 }
 
+expr_info ir_expr_fimm(real_t rval){
+    expr_info e;
+    e.type = EXPR_IMM;
+    e.rval = rval;
+    return e;
+}
+
 expr_info ir_expr_var(var_t id){
     expr_info e;
     e.type = EXPR_VAR;
@@ -168,7 +175,14 @@ int ir_func_ctx_inc_local(ir_func_ctx *ctx){
 }
 
 int ir_func_ctx_add_local(ir_func_ctx *ctx, char *name, int size){
-    dict_set(ctx->local_vars, name, (void*)(long)ctx->f->param_num);
+    dict_set(ctx->local_vars, name, (void*)(long)(ctx->f->param_num));
+    int ret = ctx->f->param_num;
+    ctx->f->param_num += size;
+    return ret;
+}
+
+int ir_func_ctx_add_flocal(ir_func_ctx *ctx, char *name, int size){
+    dict_set(ctx->local_vars, name, (void*)(long)(ctx->f->param_num | (1 << 31)));
     int ret = ctx->f->param_num;
     ctx->f->param_num += size;
     return ret;
@@ -179,7 +193,16 @@ int ir_func_ctx_get_local(ir_func_ctx *ctx, char *name){
     if(value == NULL){
         return -1;
     }else{
-        return (int)(long)*value;
+        return (int)(long)*value & 0x7fffffff;
+    }
+}
+
+int ir_func_ctx_get_flag(ir_func_ctx *ctx, char *name){
+    void **value = dict_get(ctx->local_vars, name);
+    if(value == NULL){
+        return 0;
+    }else{
+        return ((int)(long)*value) >> 31;
     }
 }
 
@@ -239,6 +262,20 @@ void ir_print(ir i){
         "IR_ADDR",
         "IR_DEREF",
         "IR_LEA",
+        "IR_I2F",
+        "IR_F2I",
+        "IR_FADD",
+        "IR_FSUB",
+        "IR_FMUL",
+        "IR_FDIV",
+        "IR_FNEG",
+        "IR_FLT",
+        "IR_FGT",
+        "IR_FLE",
+        "IR_FGE",
+        "IR_FEQ",
+        "IR_FNE",
+        "IR_FMOD",
     };
     if (i.ins == IR_CALL){
         printf("[%s] (%s %c%lld)\n", ir_code_str[i.ins], i.op, ir_expr_type(i.op1), i.op1.ival);

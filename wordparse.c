@@ -58,6 +58,54 @@ typedef unsigned char bool_t;
 
 #define SYM_DIFF_SET (SYM_SET_MUL - SYM_MUL)
 
+const char* tbl_sym_name[] = {
+    "nop",
+    "dot",
+    "arrow",
+    "inca",
+    "deca",
+    "incb",
+    "decb",
+    "neg",
+    "pointer",
+    "addr",
+    "mul",
+    "div",
+    "rem",
+    "add",
+    "sub",
+    "and",
+    "xor",
+    "or",
+    "not",
+    "shl",
+    "shr",
+    "gt",
+    "lt",
+    "ge",
+    "le",
+    "eq",
+    "ne",
+    "land",
+    "lor",
+    "not",
+    "sel",
+    "sep",
+    "set",
+    "set_mul",
+    "set_div",
+    "set_rem",
+    "set_add",
+    "set_sub",
+    "set_and",
+    "set_xor",
+    "set_or",
+    "set_shl",
+    "set_shr",
+    "comma",
+    "semi",
+};
+
 // 以后属性里面可以有类型要求的信息
 typedef struct symattr {
     unsigned char
@@ -89,9 +137,11 @@ symattr tbl_optype[] = {
     { .ltr = 0, .binary = 1, .before = 0, .after = 0, .end = 0 },
     { .ltr = 1, .binary = 1, .before = 0, .after = 0, .end = 0 },
     { .ltr = 1, .binary = 1, .before = 0, .after = 0, .end = 0 },
+    { .ltr = 1, .binary = 1, .before = 0, .after = 0, .end = 0 },
+    { .ltr = 1, .binary = 1, .before = 0, .after = 0, .end = 0 },
 };
 
-#define PRIO_NUM 20
+#define PRIO_NUM 30
 #define PRIO_KEYWORD 17
 #define PRIO_BRAC_BIG 16
 
@@ -170,6 +220,7 @@ const char* SEQ_ALPHA = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@_
 const char* SEQ_SIGN = "=<>!,.+-*/%^&|~?:;";
 const char* SEQ_PUSH = "{([";
 const char* SEQ_POP = "})]";
+// 括号编号 0. {} 1. () 2. []
 
 // 手动统计的
 #define NUM_SIGN 18
@@ -382,6 +433,7 @@ void dict_freek(dict* d){
 #define KEYWORD_ELSE 8
 #define KEYWORD_WHILE 9
 #define KEYWORD_FOR 10
+#define KEYWORD_RETURN 11
 
 #define KEYWORD_IS_TYPE(x) ((x) <= KEYWORD_VOID)
 #define KEYWORD_IS_NONVOID_TYPE(x) ((x) <= KEYWORD_DOUBLE)
@@ -407,6 +459,7 @@ keyword tbl_keywords[] = {
     { "else", KEYWORD_ELSE },
     { "while", KEYWORD_WHILE },
     { "for", KEYWORD_FOR },
+    { "return", KEYWORD_RETURN },
     { NULL, 0 }
 };
 
@@ -418,10 +471,6 @@ void init_keywords(){
         i++;
     }
 }
-
-#define NUM_ELEMENTS 0x100
-
-elem expr[NUM_ELEMENTS];
 
 #define ERR_NO 0
 #define ERR_INVAL 1
@@ -461,7 +510,7 @@ int resolve_exp(elem* expr, const char* s){
             }
             buf[i] = '\0';
             expr[p].prio = 0;
-            expr[p++].name = _strdup(buf);
+            expr[p++].name = strdup(buf);
             i = 0;
             break;
         case 2:
@@ -478,7 +527,7 @@ int resolve_exp(elem* expr, const char* s){
                 break;
             }
             expr[p].prio = 0;
-            expr[p++].name = _strdup(buf);
+            expr[p++].name = strdup(buf);
             i = 0;
             break;
         case 3:
@@ -489,7 +538,7 @@ int resolve_exp(elem* expr, const char* s){
                     return ERR_SIGN;
                 expr[p].sym = trie[cur].sym;
                 expr[p].prio = trie[cur].prio;
-                expr[p++].attr = tbl_optype[trie[cur].sym];
+                expr[p++].attr = tbl_optype[trie[cur].prio];
                 expr[p].type = ELEM_OP;
                 trie = trie_sign2;
                 to = trie[0].child[ctype[(unsigned char)*s].ext];
@@ -504,7 +553,7 @@ int resolve_exp(elem* expr, const char* s){
                 return ERR_SIGN;
             expr[p].sym = trie[cur].sym;
             expr[p].prio = trie[cur].prio;
-            expr[p++].attr = tbl_optype[trie[cur].sym];
+            expr[p++].attr = tbl_optype[trie[cur].prio];
             cur = 0;
             break;
         }
@@ -542,6 +591,12 @@ int resolve_exp(elem* expr, const char* s){
             expr[p].attr.op = 1;
             expr[p++].attr.type = inf.ext;
             state = 0;
+            if (inf.ext == BRAC_BIG){
+                expr[p].type = ELEM_OP;
+                expr[p].sym = SYM_SEMI;
+                expr[p].prio = 18;
+                expr[p++].attr = tbl_optype[18];
+            }
             continue;
         default: break;
         }
@@ -560,6 +615,7 @@ inline int elem_less(elem* x, elem* y){
 
 elem bottom = { .prio = 0xFF };
 
+// 单调栈构建表达式树
 elem* build_tree(elem* e, elem** t){
     elem* h[PRIO_NUM];
     int p = 0;
@@ -614,24 +670,45 @@ void dump(elem* e){
         printf("K%d", e->sym);
 }
 
-void dump2(elem* e){
+void dump_word(elem* e){
+    switch (e->type){
+    case ELEM_KEYWORD:
+        printf("KEYWORD %s,", tbl_keywords[e->sym].name);
+        break;
+    case ELEM_NAME:
+        printf("NAME %s,", e->name);
+        break;
+    case ELEM_OP:
+        printf("OPERATOR %s,", tbl_sym_name[e->sym]);
+        break;
+    case ELEM_STACK:
+        printf("BRACKET %c,", e->attr.op ? SEQ_POP[e->attr.type] : SEQ_PUSH[e->attr.type]);
+        break;
+    case ELEM_VALUE:
+        printf("VALUE %s,", e->name);
+        break;
+    }
+}
+
+void dump2(elem* e, int depth){
     if (e->type == ELEM_STACK){
-        printf("(%d", e->attr.type);
+        printf("%*sBRACKET %c", 0, "", SEQ_PUSH[e->attr.type]);
     } else if (e->type == ELEM_NAME || e->type == ELEM_VALUE){
-        printf("%s", e->name);
+        printf("%*s%s %s", 0, "", e->type == ELEM_NAME ? "NAME" : "VALUE", e->name);
     } else if (e->type == ELEM_OP){
-        printf("X%d", e->sym);
+        printf("%*sOPERATOR %s", 0, "", tbl_sym_name[e->sym]);
     } else if (e->type == ELEM_KEYWORD){
-        printf("K%d", e->sym);
+        printf("%*sKEYWORD %s", 0, "", tbl_keywords[e->sym].name);
     }
     if (!e->l && !e->r){
-        putchar(' ');
         return;
     }
-    putchar('<');
-    if (e->l) dump2(e->l);
-    if (e->r) dump2(e->r);
-    putchar('>');
+    printf("%*s{", 0, "");
+    if (e->l) dump2(e->l, depth + 1);
+    //printf("%*s--\n", depth * 2, "");
+    putchar('|');
+    if (e->r) dump2(e->r, depth + 1);
+    printf("%*s}", 0, "");
 }
 
 // 类型特性 void => 0
@@ -701,11 +778,11 @@ typedef struct bits_double {
     };
 } bits_double;
 
-typedef unsigned short id_t;
+typedef unsigned short vid_t;
 
 typedef struct var {
     type t;
-    id_t id;
+    vid_t id;
 } var;
 
 // 规定要么t.constexp == 1要么id有效
@@ -716,7 +793,7 @@ typedef struct value {
         var v;
         struct {
             type t;
-            id_t id;
+            vid_t id;
         };
     };
     union {
@@ -840,7 +917,7 @@ void resolve_value(elem* e, value* v){
 // 一个域内可以有变量、函数、结构体定义
 typedef struct field {
     dict d;
-    id_t insid;
+    vid_t insid;
 } field;
 
 // 第0个应该一开始初始化，作为全局变量表
@@ -870,13 +947,13 @@ void field_pop(){
     layer--;
 }
 
-id_t var_newid(){
+vid_t var_newid(){
     return ++fields[layer].insid;
 }
 
 // 每个元素的名称都是单独申请
 // 保证不重复申请内存，元素被释放的时间应较晚
-id_t var_new_named(char* name, type t){
+vid_t var_new_named(char* name, type t){
     var v;
     v.t = t;
     v.id = ++fields[layer].insid;
@@ -896,61 +973,27 @@ void var_getref(var** v, char* name){
     exit(-1);
 }
 
-const char* tbl_sym_name[] = {
-    "nop",
-    "dot",
-    "arrow",
-    "inca",
-    "deca",
-    "incb",
-    "decb",
-    "neg",
-    "pointer",
-    "addr",
-    "mul",
-    "div",
-    "rem",
-    "add",
-    "sub",
-    "and",
-    "or",
-    "not",
-    "shl",
-    "shr",
-    "gt",
-    "lt",
-    "ge",
-    "le",
-    "eq",
-    "ne",
-    "land",
-    "lor",
-    "not",
-    "sel",
-    "sep"
-};
-
 // 以后提供更详细的信息
 // id_t改为value，提供内存、寄存器、立即数的类别
 // 最后交给相应平台指令选择器，选出并给出SSA指令
 // 然后寄存器分配算法
-void emit_ins(id_t oid, id_t aid, id_t bid, unsigned char sym){
+void emit_ins(vid_t oid, vid_t aid, vid_t bid, unsigned char sym){
     printf("%s %hu,%hu,%hu\n", tbl_sym_name[sym], oid, aid, bid);
 }
 
-void emit_movl(id_t oid, long imm){
+void emit_movl(vid_t oid, long imm){
     printf("movl %hu,$%ld\n", oid, imm);
 }
 
-void emit_movd(id_t oid, double imm){
+void emit_movd(vid_t oid, double imm){
     printf("movd %hu,$%lf\n", oid, imm);
 }
 
-void emit_assign(id_t oid, id_t iid){
+void emit_assign(vid_t oid, vid_t iid){
     printf("store %hu,%hu\n", oid, iid);
 }
 
-void emit_fetch(id_t oid, id_t iid){
+void emit_fetch(vid_t oid, vid_t iid){
     printf("load %hu,%hu\n", oid, iid);
 }
 
@@ -998,7 +1041,7 @@ double value_calc_dd(double a, double b, unsigned char sym){
     exit(-1);
 }
 
-void value_cast_constexp(id_t oid, value* i, type t){
+void value_cast_constexp(vid_t oid, value* i, type t){
     if (PRIM_IS_INT(t.tid)){
         emit_movl(oid, PRIM_IS_INT(i->t.tid) ? i->l : i->d);
     } else {
@@ -1019,7 +1062,7 @@ void value_try_cast(value* o, value* i, type t){
     printf("%c2%c %hu,%hu\n", tbl_types[i->t.tid], tbl_types[t.tid], o->id, i->id);
 }
 
-void value_basic_cast(value* o, value* i, id_t tid){
+void value_basic_cast(value* o, value* i, vid_t tid){
     if (i->t.constexp){
         type t = { .constexp = 1, .lvalue = 0, .pointer = 0, .prim = 1, .tid = tid };
         o->id = var_newid();
@@ -1045,12 +1088,33 @@ void value_cast_intptr(value* o, value* i, type pt){
     value_try_cast(o, i, intptr_type);
 }
 
-inline id_t var_def_single(type t, elem* e){
-    if(e->l || e->r || e->type != ELEM_NAME){
+inline bool_t elem_is_func_decl(elem* e){
+    return e->type == ELEM_NAME
+        && e->r && e->r->type == ELEM_STACK
+        && e->r->attr.type == BRAC_SMALL
+        && e->r->r && e->r->r->type == ELEM_STACK
+        && e->r->r->attr.type == BRAC_BIG;
+}
+
+inline vid_t var_def_single(type t, elem* e){
+    if (e->type != ELEM_NAME){
         fputs("define variable error", stderr);
         exit(-1);
     }
-    id_t id = var_new_named(e->name, t);
+    if(e->l || e->r){
+        if (elem_is_func_decl(e)){
+            // 函数定义
+            printf("define function %s\n", e->name);
+            return 0;
+        }
+        fputs("define variable error", stderr);
+        exit(-1);
+    }
+    if (t.prim && t.tid == PRIM_VOID){
+        fputs("define void variable", stderr);
+        exit(-1);
+    }
+    vid_t id = var_new_named(e->name, t);
     if (t.tid < sizeof(tbl_types) - 1){
         printf("alloca %hu,%c,%s\n", id, tbl_types[t.tid], e->name);
         return id;
@@ -1059,7 +1123,7 @@ inline id_t var_def_single(type t, elem* e){
     return id;
 }
 
-void var_def(id_t tid, elem* e){
+void var_def(vid_t tid, elem* e){
     type t = { .constexp = 0, .lvalue = 1, .pointer = 0, .prim = 1, .tid = tid };
     while (e){
         if (e->type == ELEM_OP && e->sym == SYM_COMMA){
@@ -1080,7 +1144,7 @@ void var_def(id_t tid, elem* e){
 void value_calc(value* o, value* x, value* y, unsigned char sym){
     // 指针加偏移
     if (x->t.pointer && y->t.prim && PRIM_IS_INT(y->t.tid)){
-        
+        fputs("pointer arithmetic", stderr);
         return;
     }
     // 常表达式
@@ -1322,7 +1386,58 @@ void dump_ins(elem* e, value* v){
     }
 }
 
-int main(){
+void remove_comment(const char* input, char* output){
+    int state = 0;
+    while (*input){
+        switch (state){
+        case 0:
+            if (*input == '/'){
+                state = 1;
+            } else {
+                *output++ = *input;
+            }
+            break;
+        case 1:
+            if (*input == '/'){
+                state = 2;
+            } else if (*input == '*'){
+                state = 3;
+            } else {
+                *output++ = '/';
+                *output++ = *input;
+                state = 0;
+            }
+            break;
+        case 2:
+            if (*input == '\n'){
+                state = 0;
+            }
+            break;
+        case 3:
+            if (*input == '*'){
+                state = 4;
+            }
+            break;
+        case 4:
+            if (*input == '/'){
+                state = 0;
+            } else {
+                state = 3;
+            }
+            break;
+        }
+        input++;
+    }
+    *output = '\0';
+}
+
+#define NUM_ELEMENTS 0x400
+
+elem expr[NUM_ELEMENTS];
+
+char buf[0x1000], code[0x1000];
+
+int main(int argc, char** argv){
     // 尝试的编译
     // 1. 将字符分块，变为名称、字面量、关键字、操作符，操作符按左到右顺序合并，运用Trie字典树，同时处理预处理命令、三种括号的栈"{}()[]"
     // 2. 将符号列表构建为笛卡尔树(我可能思路清奇了)，运用单调栈，参与比较的信息有优先级、是否为右至左操作符
@@ -1337,6 +1452,7 @@ int main(){
     init_keywords();
     
     // 计划规定语法 func [type] [name]; 规定函数返回值，然后直接按[name]链接符号，参数强类型
+    /*
     const char* code =
         "int a, b;"
         "float c;"
@@ -1345,25 +1461,40 @@ int main(){
         "a += a * a + 2 * 3 * 5;"
         "b = (b - a) * 10;"
         "a *= (int)c;";
+    */
+
+   if (argc < 2){
+       fputs("no input file", stderr);
+       return -1;
+   }
+
+   FILE* f = fopen(argv[1], "r");
+   fseek(f, 0, SEEK_END);
+   int len = ftell(f);
+   fseek(f, 0, SEEK_SET);
+   fread(buf, 1, len, f);
+   fclose(f);
+
+   remove_comment(buf, code);
 
     // C++声明 [register|static|extern|auto](存储类型) {[struct|union|enum] <type> 括号内任意位置可选[const]} [*[const]]* [&|&&] [[<class>::][<variable>|operator[...]]] [(<T类型>... args) [const(class内部)]|[大小]*] [{初始化列表...|函数体...}|=[构造器|表达式=>非explicit构造]|[()构造器]]
     // 状态: 各种作用域，特别的有命名空间、类、函数、全局、if、else、for、while、do...while、switch，访问修饰
 
-    printf("%d\n", resolve_exp(expr, code));
+    resolve_exp(expr, code);
 
     for (int i = 0; expr[i].type != ELEM_END; i++){
-        printf("%d ", expr[i].prio);
+        dump_word(expr + i);
     }
-    putchar('\n');
+    //putchar('\n');
 
-    elem* top = build_tree(expr, NULL);
+    // elem* top = build_tree(expr, NULL);
 
-    dump2(top);
-    putchar('\n');
+    // dump2(top, 0);
+    // putchar('\n');
 
-    fields_init();
-    value v;
-    dump_ins(top, &v);
+    // fields_init();
+    // value v;
+    // dump_ins(top, &v);
 
     return 0;
 }

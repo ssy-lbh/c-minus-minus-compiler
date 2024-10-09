@@ -6,7 +6,7 @@ int sum(int n)
 	i = 1;
 	result = 0;
 
-	while(i<=n)
+	while(i <= n)
 	{
 		result = result + i;
 		i = i + 1;

@@ -3,10 +3,11 @@ int max(int x, int y, int z)
 {
 	int biggest;
 	biggest = x;
-	if(y>biggest)  /*comment example*/
+	if(y > biggest)  /*comment example*/
 		biggest = y;
-	if(z>biggest) biggest = z;
-
+	if(z > biggest)
+		biggest = z;
+	
 	return biggest;
 }
 
