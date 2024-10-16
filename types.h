@@ -19,6 +19,15 @@ typedef struct _expr_info {
     unsigned char type;
 } expr_info;
 
+#define LOOP_BREAK 0
+#define LOOP_CONTINUE 1
+
+typedef struct _loop_info {
+    struct _loop_info *next;
+    unsigned char type;
+    int label;
+} loop_info;
+
 #define REAL(x) (*(real_t*)&(x))
 
 #endif

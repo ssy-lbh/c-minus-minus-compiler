@@ -23,6 +23,9 @@ ir_program *program = NULL;
 ir_func_ctx *f_stack[0x40];
 int f_top = -1;
 
+loop_info *l_stack[0x40];
+int l_top = -1;
+
 char translate(char c){
     switch (c){
     case 'n': return '\n';
@@ -109,6 +112,9 @@ other .
     if (!strcmp(yytext, "void")) return VOID;
     if (!strcmp(yytext, "int") || !strcmp(yytext, "char")) return INT;
     if (!strcmp(yytext, "float")) return FLOAT;
+
+    if (!strcmp(yytext, "break")) return BREAK;
+    if (!strcmp(yytext, "continue")) return CONTINUE;
 
     strcpy(name, yytext);
 

@@ -63,32 +63,34 @@ extern int yydebug;
     WHILE = 264,                   /* WHILE  */
     FOR = 265,                     /* FOR  */
     RETURN = 266,                  /* RETURN  */
-    VOID = 267,                    /* VOID  */
-    INT = 268,                     /* INT  */
-    FLOAT = 269,                   /* FLOAT  */
-    STR = 270,                     /* STR  */
-    CHAR = 271,                    /* CHAR  */
-    LE = 272,                      /* LE  */
-    GE = 273,                      /* GE  */
-    EQ = 274,                      /* EQ  */
-    NE = 275,                      /* NE  */
-    SHL = 276,                     /* SHL  */
-    SHR = 277,                     /* SHR  */
-    AND = 278,                     /* AND  */
-    OR = 279,                      /* OR  */
-    ARROW = 280,                   /* ARROW  */
-    INC = 281,                     /* INC  */
-    DEC = 282,                     /* DEC  */
-    ADD_ASSIGN = 283,              /* ADD_ASSIGN  */
-    SUB_ASSIGN = 284,              /* SUB_ASSIGN  */
-    MUL_ASSIGN = 285,              /* MUL_ASSIGN  */
-    DIV_ASSIGN = 286,              /* DIV_ASSIGN  */
-    MOD_ASSIGN = 287,              /* MOD_ASSIGN  */
-    SHL_ASSIGN = 288,              /* SHL_ASSIGN  */
-    SHR_ASSIGN = 289,              /* SHR_ASSIGN  */
-    AND_ASSIGN = 290,              /* AND_ASSIGN  */
-    XOR_ASSIGN = 291,              /* XOR_ASSIGN  */
-    OR_ASSIGN = 292                /* OR_ASSIGN  */
+    BREAK = 267,                   /* BREAK  */
+    CONTINUE = 268,                /* CONTINUE  */
+    VOID = 269,                    /* VOID  */
+    INT = 270,                     /* INT  */
+    FLOAT = 271,                   /* FLOAT  */
+    STR = 272,                     /* STR  */
+    CHAR = 273,                    /* CHAR  */
+    LE = 274,                      /* LE  */
+    GE = 275,                      /* GE  */
+    EQ = 276,                      /* EQ  */
+    NE = 277,                      /* NE  */
+    SHL = 278,                     /* SHL  */
+    SHR = 279,                     /* SHR  */
+    AND = 280,                     /* AND  */
+    OR = 281,                      /* OR  */
+    ARROW = 282,                   /* ARROW  */
+    INC = 283,                     /* INC  */
+    DEC = 284,                     /* DEC  */
+    ADD_ASSIGN = 285,              /* ADD_ASSIGN  */
+    SUB_ASSIGN = 286,              /* SUB_ASSIGN  */
+    MUL_ASSIGN = 287,              /* MUL_ASSIGN  */
+    DIV_ASSIGN = 288,              /* DIV_ASSIGN  */
+    MOD_ASSIGN = 289,              /* MOD_ASSIGN  */
+    SHL_ASSIGN = 290,              /* SHL_ASSIGN  */
+    SHR_ASSIGN = 291,              /* SHR_ASSIGN  */
+    AND_ASSIGN = 292,              /* AND_ASSIGN  */
+    XOR_ASSIGN = 293,              /* XOR_ASSIGN  */
+    OR_ASSIGN = 294                /* OR_ASSIGN  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -97,13 +99,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 82 "parse.y"
+#line 88 "parse.y"
 
     long long num;
     char* name;
     expr_info value;
 
-#line 107 "parse.tab.h"
+#line 109 "parse.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

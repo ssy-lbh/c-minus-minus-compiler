@@ -537,6 +537,9 @@ ir_program *program = NULL;
 ir_func_ctx *f_stack[0x40];
 int f_top = -1;
 
+loop_info *l_stack[0x40];
+int l_top = -1;
+
 char translate(char c){
     switch (c){
     case 'n': return '\n';
@@ -554,8 +557,8 @@ char translate(char c){
     printf("Unknown character '\\%c'\n", c);
     return '\0';
 }
-#line 558 "lex.yy.c"
-#line 559 "lex.yy.c"
+#line 561 "lex.yy.c"
+#line 562 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -772,9 +775,9 @@ YY_DECL
 		}
 
 	{
-#line 68 "word.l"
+#line 71 "word.l"
 
-#line 778 "lex.yy.c"
+#line 781 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -833,7 +836,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 69 "word.l"
+#line 72 "word.l"
 {
     printf("%d:(Int2, %s)\n", line, yytext);
 
@@ -843,7 +846,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 75 "word.l"
+#line 78 "word.l"
 {
     printf("%d:(Int8, %s)\n", line, yytext);
 
@@ -853,7 +856,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 81 "word.l"
+#line 84 "word.l"
 {
     printf("%d:(Int10, %s)\n", line, yytext);
 
@@ -863,7 +866,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 87 "word.l"
+#line 90 "word.l"
 {
     printf("%d:(Int16, %s)\n", line, yytext);
 
@@ -873,7 +876,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 93 "word.l"
+#line 96 "word.l"
 {
     printf("%d:(Real, %s)\n", line, yytext);
 
@@ -883,7 +886,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 99 "word.l"
+#line 102 "word.l"
 {
     printf("%d:(Name, %s)\n", line, yytext);
     
@@ -898,6 +901,9 @@ YY_RULE_SETUP
     if (!strcmp(yytext, "int") || !strcmp(yytext, "char")) return INT;
     if (!strcmp(yytext, "float")) return FLOAT;
 
+    if (!strcmp(yytext, "break")) return BREAK;
+    if (!strcmp(yytext, "continue")) return CONTINUE;
+
     strcpy(name, yytext);
 
     if (f_top >= 0 && ir_func_ctx_get_flag(f_stack[f_top], yytext)) return FNAME;
@@ -907,7 +913,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 119 "word.l"
+#line 125 "word.l"
 {
     printf("%d:(Operator, %s)\n", line, yytext);
     if (!strcmp(yytext, "<=")) return LE;
@@ -937,7 +943,7 @@ YY_RULE_SETUP
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 144 "word.l"
+#line 150 "word.l"
 {
     printf("%d:(Whitespace)\n", line);
     size_t len = strlen(yytext);
@@ -949,7 +955,7 @@ YY_RULE_SETUP
 case 9:
 /* rule 9 can match eol */
 YY_RULE_SETUP
-#line 151 "word.l"
+#line 157 "word.l"
 {
     printf("%d:(String, %s)\n", line, yytext);
     size_t len = strlen(yytext);
@@ -968,7 +974,7 @@ YY_RULE_SETUP
 case 10:
 /* rule 10 can match eol */
 YY_RULE_SETUP
-#line 165 "word.l"
+#line 171 "word.l"
 {
     num = yytext[1];
     if (yytext[1] == '\\')
@@ -978,7 +984,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 171 "word.l"
+#line 177 "word.l"
 {
     printf("%d:(Semicolon, %s)\n", line, yytext);
     return ';';
@@ -987,14 +993,14 @@ YY_RULE_SETUP
 case 12:
 /* rule 12 can match eol */
 YY_RULE_SETUP
-#line 175 "word.l"
+#line 181 "word.l"
 {
     printf("%d:(Line Comment, %s)\n", line, yytext);
 }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 178 "word.l"
+#line 184 "word.l"
 {
     printf("%d:(Block Comment, %s)\n", line, yytext);
 }
@@ -1002,14 +1008,14 @@ YY_RULE_SETUP
 case 14:
 /* rule 14 can match eol */
 YY_RULE_SETUP
-#line 181 "word.l"
+#line 187 "word.l"
 {
     printf("%d:(Preprocessor, %s)\n", line, yytext);
 }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 184 "word.l"
+#line 190 "word.l"
 {
     printf("%d:(Other, %s)\n", line, yytext);
     yyerror("Illegal Character!");
@@ -1017,10 +1023,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 188 "word.l"
+#line 194 "word.l"
 ECHO;
 	YY_BREAK
-#line 1024 "lex.yy.c"
+#line 1030 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2025,7 +2031,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 188 "word.l"
+#line 194 "word.l"
 
 
 void yyerror(char *s){

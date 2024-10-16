@@ -102,6 +102,11 @@ ir_program *ir_program_new();
 ir_func *ir_func_new(const char *name, int param_num);
 ir_func *ir_func_new_native(const char *name, int param_num, void *native_func);
 ir_func_ctx *ir_func_ctx_new(ir_func *f);
+
+void ir_loop_info_push();
+void ir_loop_info_add(unsigned char type, int label);
+void ir_loop_info_apply_and_pop(int break_label, int continue_label);
+
 ir ir_new0(ir_code ins);
 ir ir_new1(ir_code ins, expr_info op1);
 ir ir_new2(ir_code ins, expr_info op1, expr_info op2);

@@ -85,6 +85,41 @@ ir_func_ctx *ir_func_ctx_new(ir_func *f){
     return ctx;
 }
 
+extern ir_func_ctx *f_stack[0x40];
+extern int f_top;
+
+extern loop_info *l_stack[0x40];
+extern int l_top;
+
+void ir_loop_info_push(){
+    l_top++;
+    l_stack[l_top] = NULL;
+}
+
+void ir_loop_info_add(unsigned char type, int label){
+    loop_info *l = (loop_info *)malloc(sizeof(loop_info));
+    l->type = type;
+    l->label = label;
+    l->next = l_stack[l_top];
+    l_stack[l_top] = l;
+}
+
+void ir_loop_info_apply_and_pop(int break_label, int continue_label){
+    loop_info *l = l_stack[l_top];
+    while(l != NULL){
+        if(l->type == LOOP_BREAK){
+            f_stack[f_top]->f->code[l->label].op1.ival = break_label;
+        }else if(l->type == LOOP_CONTINUE){
+            f_stack[f_top]->f->code[l->label].op1.ival = continue_label;
+        }
+        loop_info *tmp = l;
+        l = l->next;
+        free(tmp);
+    }
+    l_stack[l_top] = NULL;
+    l_top--;
+}
+
 ir ir_new0(ir_code ins){
     ir i;
     i.ins = ins;

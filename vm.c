@@ -88,6 +88,16 @@ static void vm_native_scanf(vm_ctx* ctx){
             }
             format++;
         } else {
+            if (*format != ' '){
+                char c = getchar();
+                while (c == ' ' || c == '\n'){
+                    c = getchar();
+                }
+                if (c != *format){
+                    ctx->vars[0] = i - 1;
+                    return;
+                }
+            }
             format++;
         }
     }
@@ -135,6 +145,10 @@ static var_t vm_fetch_val(vm_ctx* ctx, expr_info e){
         puts("vm_fetch_val unknown type");
         return 0;
     }
+}
+
+static real_t vm_fmod(real_t a, real_t b){
+    return a - (int)(a / b) * b;
 }
 
 var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
@@ -318,7 +332,7 @@ var_t vm_run(vm_ctx* ctx, ir_program* prog, const char* entry){
                 *op1_ptr = REAL(op2_val) != REAL(op3_val);
                 break;
             case IR_FMOD:
-                REAL(*op1_ptr) = fmod(REAL(op2_val), REAL(op3_val));
+                REAL(*op1_ptr) = vm_fmod(REAL(op2_val), REAL(op3_val));
                 break;
             default:
                 printf("unknown instruction: %d at Function %s PC %d\n", i.ins, entry, ctx->pc);
